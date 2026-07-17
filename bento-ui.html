@@ -10,14 +10,14 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        body { background-color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; overflow-x: hidden; }
+        body { background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; overflow-x: hidden; }
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
         
         @keyframes bentoPop {
-            0% { transform: scale(0.8) translateY(20px); opacity: 0; }
-            60% { transform: scale(1.02) translateY(-5px); opacity: 1; }
+            0% { transform: scale(0.8) translateY(30px); opacity: 0; }
+            60% { transform: scale(1.03) translateY(-5px); opacity: 1; }
             100% { transform: scale(1) translateY(0); opacity: 1; }
         }
 
@@ -26,9 +26,9 @@
             box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
         }
 
-        /* Oculta la interfaz al grabar para dejar solo el video limpio */
-        .recording-mode .hide-on-record { display: none !important; }
-        .recording-mode .render-zone { width: 100vw !important; height: 100vh !important; padding: 0 !important; }
+        /* Oculta la interfaz innecesaria cuando el Smart Cropper está grabando */
+        .recording-mode .hide-on-record { opacity: 0 !important; pointer-events: none; }
+        .recording-mode .render-zone { width: 100vw !important; height: 100vh !important; justify-content: center !important; }
     </style>
 </head>
 <body>
@@ -42,7 +42,7 @@
             "columns": 4,
             "gap": "12px",
             "backgroundColor": "#e2e8f0",
-            "animationDuration": 3000 // Milisegundos de grabación
+            "animationDuration": 2500 
           },
           "widgets": [
             { "id": "w1", "type": "calendar", "colSpan": 2, "rowSpan": 2, "delay": 0.1, "theme": "dark" },
@@ -55,7 +55,8 @@
           ]
         };
 
-        const WidgetCalendar = ({ theme }) => (
+        // --- COMPONENTES DE WIDGETS ---
+        const WidgetCalendar = () => (
             <div className="flex flex-col h-full justify-between p-2">
                 <div className="flex justify-between items-center mb-2">
                     <span className="font-semibold">Citas</span>
@@ -82,14 +83,14 @@
             </div>
         );
 
-        const WidgetStatus = ({ title, subtitle, progress, theme }) => (
+        const WidgetStatus = ({ title, subtitle, progress }) => (
             <div className="flex flex-col justify-between h-full p-2 relative overflow-hidden">
                 <div className="flex justify-between items-start z-10">
                     <div>
                         <h3 className="text-xl font-bold tracking-tight">{title}</h3>
                         <p className="text-sm opacity-60">{subtitle}</p>
                     </div>
-                    <span className="bg-[#cbfb45] text-black text-xs font-bold px-2 py-1 rounded-full"><i className="fas fa-check mr-1"></i>Optimizado</span>
+                    <span className="bg-[#cbfb45] text-black text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider"><i className="fas fa-check mr-1"></i>Optimizado</span>
                 </div>
                 <div className="w-full bg-white/10 h-3 rounded-full mt-4 z-10 overflow-hidden">
                     <div className="bg-[#cbfb45] h-full rounded-full" style={{ width: progress }}></div>
@@ -124,66 +125,105 @@
             const [jsonText, setJsonText] = useState(JSON.stringify(initialJSON, null, 2));
             const [config, setConfig] = useState(initialJSON);
             const [renderKey, setRenderKey] = useState(0);
-            const [isRecording, setIsRecording] = useState(false);
+            const [recordingTarget, setRecordingTarget] = useState(null);
 
             const handleSync = () => {
                 try {
-                    const parsed = JSON.parse(jsonText);
-                    setConfig(parsed);
+                    setConfig(JSON.parse(jsonText));
                     setRenderKey(prev => prev + 1);
                 } catch (e) {
                     alert("JSON Inválido");
                 }
             };
 
-            // MOTOR DE CONEXIÓN: Captura la pestaña y la exporta a WebM para el index.html
-            const exportToVideo = async () => {
+            // MOTOR DE EXPORTACIÓN Y RECORTE EXACTO
+            const exportToVideo = async (targetId, fileName) => {
                 try {
-                    // 1. Pide permiso para grabar la pestaña actual
+                    // 1. Pedimos permiso al usuario para grabar ESTA pestaña
                     const stream = await navigator.mediaDevices.getDisplayMedia({
                         video: { displaySurface: "browser" },
-                        audio: false,
-                        preferCurrentTab: true
+                        preferCurrentTab: true,
+                        audio: false
                     });
 
-                    // 2. Prepara la grabadora
-                    const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+                    // 2. Preparamos el stream oculto
+                    const video = document.createElement('video');
+                    video.srcObject = stream;
+                    video.muted = true;
+                    await video.play();
+
+                    // 3. Activamos el modo grabación para limpiar la UI y aislar el objetivo
+                    setRecordingTarget(targetId);
+                    window.scrollTo(0, 0); // Vital para que las coordenadas de recorte sean exactas
+
+                    // Esperamos a que la UI reaccione y limpiamos el DOM
+                    await new Promise(r => setTimeout(r, 150)); 
+                    
+                    const targetEl = document.getElementById(targetId);
+                    const rect = targetEl.getBoundingClientRect();
+                    
+                    // Calculamos la escala real del monitor (soporte para pantallas Retina/4K)
+                    const scaleX = video.videoWidth / window.innerWidth;
+                    const scaleY = video.videoHeight / window.innerHeight;
+
+                    // 4. Creamos el Canvas del tamaño EXACTO del widget o grid
+                    const canvas = document.createElement('canvas');
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
+                    const ctx = canvas.getContext('2d');
+
+                    // 5. Configuramos la grabadora conectada al Canvas
+                    const canvasStream = canvas.captureStream(60); // 60 FPS para captura fluida
+                    const mediaRecorder = new MediaRecorder(canvasStream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 });
                     const chunks = [];
-                    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                    
+                    mediaRecorder.ondataavailable = e => { if(e.data.size > 0) chunks.push(e.data); };
                     
                     mediaRecorder.onstop = () => {
                         const blob = new Blob(chunks, { type: 'video/webm' });
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
-                        a.download = `bento_techexchange_${Date.now()}.webm`;
+                        a.download = `${fileName}_techexchange.webm`;
                         a.click();
                         
-                        setIsRecording(false);
-                        stream.getTracks().forEach(track => track.stop());
+                        stream.getTracks().forEach(t => t.stop());
+                        setRecordingTarget(null);
                     };
 
-                    // 3. Oculta el panel de código y arranca la animación limpia
-                    setIsRecording(true);
+                    let animationFrameId;
+                    const drawFrame = () => {
+                        // Recortamos matemáticamente el video original y lo pegamos en nuestro Canvas
+                        ctx.drawImage(
+                            video,
+                            rect.x * scaleX, rect.y * scaleY, rect.width * scaleX, rect.height * scaleY,
+                            0, 0, rect.width, rect.height
+                        );
+                        animationFrameId = requestAnimationFrame(drawFrame);
+                    };
+
+                    // 6. Arrancamos la grabación y reiniciamos las animaciones CSS
                     mediaRecorder.start();
+                    drawFrame();
                     setRenderKey(prev => prev + 1);
 
-                    // 4. Detiene la grabación según la duración en el JSON
+                    // 7. Detenemos automáticamente según la duración del JSON
                     setTimeout(() => {
                         mediaRecorder.stop();
+                        cancelAnimationFrame(animationFrameId);
                     }, config.settings.animationDuration);
 
                 } catch (err) {
-                    console.error("Error al exportar:", err);
-                    setIsRecording(false);
+                    console.error("Operación cancelada o fallida:", err);
+                    setRecordingTarget(null);
                 }
             };
 
             const renderWidgetContent = (w) => {
                 switch(w.type) {
-                    case 'calendar': return <WidgetCalendar theme={w.theme} />;
+                    case 'calendar': return <WidgetCalendar />;
                     case 'battery': return <WidgetBattery value={w.value} theme={w.theme} />;
-                    case 'status': return <WidgetStatus title={w.title} subtitle={w.subtitle} progress={w.progress} theme={w.theme} />;
+                    case 'status': return <WidgetStatus title={w.title} subtitle={w.subtitle} progress={w.progress} />;
                     case 'call': return <WidgetCall name={w.name} time={w.time} />;
                     case 'map': return <WidgetMap location={w.location} />;
                     case 'icon': return <div className="flex h-full items-center justify-center text-3xl opacity-50"><i className={`fas ${w.icon}`}></i></div>;
@@ -191,43 +231,62 @@
                 }
             };
 
+            const isRecording = recordingTarget !== null;
+
             return (
-                <div className={`min-h-screen flex text-white ${isRecording ? 'recording-mode bg-[#e2e8f0]' : 'bg-slate-900'}`}>
+                <div className={`min-h-screen flex text-white ${isRecording ? 'recording-mode' : ''}`} style={{ backgroundColor: isRecording ? config.settings.backgroundColor : '#020617' }}>
                     
-                    {/* Panel de Código - Se oculta automáticamente al grabar */}
-                    <div className="hide-on-record w-1/3 border-r border-slate-800 p-6 flex flex-col bg-slate-950 z-10 shadow-2xl">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="font-bold font-mono tracking-widest text-sm text-[#cbfb45]">BENTO ENGINE</h2>
+                    {/* PANEL LATERAL DE CÓDIGO */}
+                    <div className="hide-on-record w-1/3 border-r border-slate-800 flex flex-col bg-slate-900 z-10 shadow-2xl h-screen sticky top-0">
+                        <div className="p-6 border-b border-slate-800">
+                            <h2 className="font-bold font-mono tracking-widest text-sm text-[#cbfb45] flex items-center">
+                                <i className="fas fa-cubes mr-2"></i> BENTO ENGINE
+                            </h2>
+                            <p className="text-[10px] text-slate-400 mt-1">Generador de Assets y Clips Individuales</p>
                         </div>
-                        <textarea 
-                            value={jsonText} 
-                            onChange={(e) => setJsonText(e.target.value)}
-                            className="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-4 font-mono text-xs text-indigo-300 focus:outline-none focus:border-[#cbfb45] resize-none"
-                        ></textarea>
                         
-                        <div className="mt-4 flex space-x-2">
-                            <button onClick={handleSync} className="flex-1 bg-slate-800 text-white text-xs font-bold px-4 py-3 rounded-lg hover:bg-slate-700 transition-colors border border-slate-700">
-                                <i className="fas fa-rotate mr-2"></i>Sincronizar
-                            </button>
-                            <button onClick={exportToVideo} className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-4 py-3 rounded-lg shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 transition-all flex items-center justify-center">
-                                <i className="fas fa-video mr-2"></i>Exportar Asset
-                            </button>
+                        <div className="p-6 flex-1 flex flex-col">
+                            <textarea 
+                                value={jsonText} 
+                                onChange={(e) => setJsonText(e.target.value)}
+                                className="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-indigo-300 focus:outline-none focus:border-[#cbfb45] resize-none"
+                            ></textarea>
+                            
+                            <div className="mt-4 flex flex-col space-y-2">
+                                <button onClick={handleSync} className="w-full bg-slate-800 text-white text-xs font-bold px-4 py-3 rounded-lg hover:bg-slate-700 transition-colors border border-slate-700">
+                                    <i className="fas fa-rotate mr-2"></i>Probar Animación
+                                </button>
+                                <button onClick={() => exportToVideo('main-bento-grid', 'panel_completo')} className="w-full bg-[#cbfb45] text-black text-xs font-bold px-4 py-3 rounded-lg shadow-lg hover:bg-[#b8e53c] transition-all flex items-center justify-center">
+                                    <i className="fas fa-film mr-2"></i>Exportar Panel Completo
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Lienzo de Renderizado del Grid */}
-                    <div className="render-zone w-2/3 flex items-center justify-center p-12 overflow-hidden relative transition-all duration-300" style={{ backgroundColor: config.settings.backgroundColor }}>
+                    {/* ZONA DE RENDERIZADO */}
+                    <div className="render-zone w-2/3 flex items-center justify-center p-12 overflow-hidden transition-all duration-300 relative">
                         
-                        <div key={renderKey} className="w-[380px] h-[700px] grid content-start" style={{ 
-                            gridTemplateColumns: `repeat(${config.settings.columns}, minmax(0, 1fr))`, 
-                            gap: config.settings.gap 
-                        }}>
+                        {/* Contenedor Principal (ID referenciado para exportar todo) */}
+                        <div 
+                            id="main-bento-grid"
+                            key={renderKey} 
+                            className="w-[380px] h-[700px] grid content-start p-4 rounded-3xl" 
+                            style={{ 
+                                backgroundColor: config.settings.backgroundColor,
+                                gridTemplateColumns: `repeat(${config.settings.columns}, minmax(0, 1fr))`, 
+                                gap: config.settings.gap 
+                            }}
+                        >
                             {config.widgets.map(w => {
                                 const isDark = w.theme === 'dark';
+                                // Si estamos grabando un clip individual, ocultamos los demás
+                                const isHidden = isRecording && recordingTarget !== 'main-bento-grid' && recordingTarget !== `widget-${w.id}`;
+
                                 return (
                                     <div 
+                                        id={`widget-${w.id}`}
                                         key={w.id} 
-                                        className={`bento-item rounded-[1.8rem] p-4 ${isDark ? 'bg-[#0f0f11] text-white' : 'bg-white text-black'}`}
+                                        className={`group relative bento-item rounded-[1.8rem] transition-all duration-300 ${isDark ? 'bg-[#0f0f11] text-white' : 'bg-white text-black'} ${isHidden ? 'opacity-0' : ''}`}
                                         style={{
                                             gridColumn: `span ${w.colSpan}`,
                                             gridRow: `span ${w.rowSpan}`,
@@ -236,10 +295,21 @@
                                         }}
                                     >
                                         {renderWidgetContent(w)}
+
+                                        {/* OVERLAY: Botón para exportar solo este clip */}
+                                        <div className="hide-on-record absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-[1.8rem] z-50 backdrop-blur-sm cursor-default">
+                                            <button 
+                                                onClick={() => exportToVideo(`widget-${w.id}`, `clip_${w.type}_${w.id}`)} 
+                                                className="bg-white text-black font-bold px-4 py-2 rounded-xl text-xs hover:scale-105 transition-transform shadow-xl"
+                                            >
+                                               <i className="fas fa-video text-red-500 mr-2"></i> Grabar este Clip
+                                            </button>
+                                        </div>
                                     </div>
                                 );
                             })}
                         </div>
+
                     </div>
                 </div>
             );
