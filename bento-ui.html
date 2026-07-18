@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vibe Studio Suite | techexchange Edition</title>
+    <title>Vibe Studio Pro | Editor de Keyframes & Línea de Tiempo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
@@ -11,10 +11,11 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         body { background-color: #020617; color: #f1f5f9; font-family: 'Inter', sans-serif; margin: 0; }
-        /* Scrollbars elegantes */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         input[type="range"] { accent-color: #cbfb45; }
+        .keyframe-input { background: #020617; border: 1px solid #334155; color: white; padding: 2px 4px; border-radius: 4px; font-size: 11px; width: 100%; }
+        .keyframe-input:focus { outline: none; border-color: #cbfb45; }
     </style>
 </head>
 <body>
@@ -27,39 +28,16 @@
           "config": { "width": 1080, "height": 1920, "fps": 60, "duration": 5.0, "background": "#0f172a" },
           "elements": [
             {
-              "id": "halo_fondo", "type": "circle", "x": 540, "y": 960, "radius": 400, "color": "#1e293b", "blur": 100,
-              "animations": [ { "prop": "scale", "from": 0, "to": 1.5, "start": 0, "end": 2, "ease": "easeOut" } ]
-            },
-            {
-              "id": "telefono_cliente", "type": "image", "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4f1.svg",
-              "x": 540, "y": 960, "width": 450, "height": 450, "anchor": "center", "shadowBlur": 40, "shadowColor": "#cbfb45",
+              "id": "mi_primer_clip", "type": "rect", "x": 540, "y": 960, "width": 400, "height": 400, "borderRadius": 40, "color": "#38bdf8", "anchor": "center",
               "animations": [
-                { "prop": "y", "from": -200, "to": 960, "start": 0.5, "end": 1.5, "ease": "easeOutBounce" },
-                { "prop": "rotation", "from": -45, "to": 0, "start": 0.5, "end": 1.5, "ease": "easeOutBounce" }
+                { "prop": "scale", "from": 0, "to": 1, "start": 0.5, "end": 1.5, "ease": "easeOutBounce" },
+                { "prop": "rotation", "from": -90, "to": 0, "start": 0.5, "end": 1.5, "ease": "easeOutBounce" }
               ]
             },
             {
-              "id": "mano_reparadora_izq", "type": "image", "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/270b.svg",
-              "x": 200, "y": 1400, "width": 250, "height": 250, "anchor": "center",
+              "id": "texto_bienvenida", "type": "text", "text": "¡EDITOR ACTIVO!", "x": 540, "y": 960, "fontSize": 50, "color": "#0f172a",
               "animations": [
-                { "prop": "x", "from": -200, "to": 300, "start": 1.5, "end": 2.2, "ease": "easeOutBounce" },
-                { "prop": "y", "from": 1400, "to": 1100, "start": 1.5, "end": 2.2, "ease": "easeOutBounce" },
-                { "prop": "rotation", "from": -90, "to": 15, "start": 1.5, "end": 2.2, "ease": "easeOut" }
-              ]
-            },
-            {
-              "id": "mano_reparadora_der", "type": "image", "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/270b.svg",
-              "x": 880, "y": 1400, "width": 250, "height": 250, "anchor": "center",
-              "animations": [
-                { "prop": "x", "from": 1280, "to": 780, "start": 1.7, "end": 2.4, "ease": "easeOutBounce" },
-                { "prop": "y", "from": 1400, "to": 1100, "start": 1.7, "end": 2.4, "ease": "easeOutBounce" },
-                { "prop": "rotation", "from": 90, "to": -15, "start": 1.7, "end": 2.4, "ease": "easeOut" }
-              ]
-            },
-            {
-              "id": "marca", "type": "text", "text": "techexchange", "x": 540, "y": 300, "fontSize": 80, "color": "#ffffff",
-              "animations": [
-                { "prop": "opacity", "from": 0, "to": 1, "start": 2.5, "end": 3.0, "ease": "linear" }
+                { "prop": "scale", "from": 0, "to": 1, "start": 0.8, "end": 1.8, "ease": "easeOutBounce" }
               ]
             }
           ]
@@ -100,6 +78,11 @@
             
             const canvasRef = useRef(null);
             const animRef = useRef(null);
+
+            const updateDataState = (newData) => {
+                setData(newData);
+                setJsonText(JSON.stringify(newData, null, 2));
+            };
 
             const loadImages = async (elements) => {
                 const loaded = { ...imagesAssets };
@@ -148,23 +131,17 @@
 
                 data.elements.forEach(el => {
                     ctx.save();
-                    
                     const x = getAnimatedValue(el, 'x', el.x || 0, currentT);
                     const y = getAnimatedValue(el, 'y', el.y || 0, currentT);
-                    const scale = getAnimatedValue(el, 'scale', el.scale || 1, currentT);
+                    const scale = getAnimatedValue(el, 'scale', el.scale !== undefined ? el.scale : 1, currentT);
                     const opacity = getAnimatedValue(el, 'opacity', el.opacity !== undefined ? el.opacity : 1, currentT);
                     const rot = getAnimatedValue(el, 'rotation', el.rotation || 0, currentT);
                     const blur = getAnimatedValue(el, 'blur', el.blur || 0, currentT);
-                    const grayscale = getAnimatedValue(el, 'grayscale', el.grayscale || 0, currentT);
                     const shadowBlur = getAnimatedValue(el, 'shadowBlur', el.shadowBlur || 0, currentT);
                     const color = el.type !== 'image' ? getAnimatedValue(el, 'color', el.color || "#ffffff", currentT) : null;
 
                     ctx.globalAlpha = Math.max(0, Math.min(1, opacity));
-                    
-                    let filterStr = "";
-                    if (blur > 0) filterStr += `blur(${blur}px) `;
-                    if (grayscale > 0) filterStr += `grayscale(${grayscale}%)`;
-                    if (filterStr) ctx.filter = filterStr.trim();
+                    if (blur > 0) ctx.filter = `blur(${blur}px)`;
 
                     if (shadowBlur > 0) {
                         ctx.shadowBlur = shadowBlur;
@@ -175,14 +152,12 @@
                     ctx.rotate(rot * Math.PI / 180);
                     ctx.scale(scale, scale);
 
-                    if (el.type === 'image') {
+                    if (el.type === 'image' && imagesAssets[el.id]) {
                         const img = imagesAssets[el.id];
-                        if (img) {
-                            const w = getAnimatedValue(el, 'width', el.width || img.width, currentT);
-                            const h = getAnimatedValue(el, 'height', el.height || img.height, currentT);
-                            if (el.anchor === 'center') ctx.drawImage(img, -w/2, -h/2, w, h);
-                            else ctx.drawImage(img, 0, 0, w, h);
-                        }
+                        const w = getAnimatedValue(el, 'width', el.width || img.width, currentT);
+                        const h = getAnimatedValue(el, 'height', el.height || img.height, currentT);
+                        if (el.anchor === 'center') ctx.drawImage(img, -w/2, -h/2, w, h);
+                        else ctx.drawImage(img, 0, 0, w, h);
                     }
                     else if (el.type === 'rect') {
                         const w = getAnimatedValue(el, 'width', el.width, currentT);
@@ -200,9 +175,7 @@
                     else if (el.type === 'circle') {
                         const r = getAnimatedValue(el, 'radius', el.radius, currentT);
                         ctx.fillStyle = color;
-                        ctx.beginPath();
-                        ctx.arc(0, 0, r, 0, Math.PI * 2);
-                        ctx.fill();
+                        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
                     }
                     else if (el.type === 'text') {
                         ctx.fillStyle = color;
@@ -216,17 +189,12 @@
                         ctx.strokeStyle = "#cbfb45";
                         ctx.lineWidth = 6 / scale; 
                         ctx.setLineDash([15 / scale, 15 / scale]);
-                        
                         const w = el.width || (el.radius ? el.radius * 2 : 200);
                         const h = el.height || (el.radius ? el.radius * 2 : 100);
-                        
                         if (el.anchor === 'center' || el.type === 'circle' || el.type === 'text') {
                             ctx.strokeRect(-w/2 - 10, -h/2 - 10, w + 20, h + 20);
-                        } else {
-                            ctx.strokeRect(-10, -10, w + 20, h + 20);
-                        }
+                        } else { ctx.strokeRect(-10, -10, w + 20, h + 20); }
                     }
-
                     ctx.restore();
                 });
             };
@@ -255,7 +223,6 @@
             const handleCanvasClick = (e) => {
                 const canvas = canvasRef.current;
                 const rect = canvas.getBoundingClientRect();
-                
                 const scaleX = canvas.width / rect.width;
                 const scaleY = canvas.height / rect.height;
                 const clickX = (e.clientX - rect.left) * scaleX;
@@ -266,19 +233,11 @@
                     const el = data.elements[i];
                     const x = getAnimatedValue(el, 'x', el.x || 0, time);
                     const y = getAnimatedValue(el, 'y', el.y || 0, time);
-                    
                     const w = el.width || (el.radius ? el.radius * 2 : 300);
                     const h = el.height || (el.radius ? el.radius * 2 : 100);
-                    
                     let minX = el.anchor === 'center' || el.type === 'circle' || el.type === 'text' ? x - w/2 : x;
-                    let maxX = minX + w;
                     let minY = el.anchor === 'center' || el.type === 'circle' || el.type === 'text' ? y - h/2 : y;
-                    let maxY = minY + h;
-
-                    if (clickX >= minX && clickX <= maxX && clickY >= minY && clickY <= maxY) {
-                        hitId = el.id;
-                        break;
-                    }
+                    if (clickX >= minX && clickX <= minX + w && clickY >= minY && clickY <= minY + h) { hitId = el.id; break; }
                 }
                 setSelectedId(hitId);
             };
@@ -286,28 +245,18 @@
             const updateElementProperty = (prop, value) => {
                 if(!selectedId) return;
                 const newElements = data.elements.map(el => el.id === selectedId ? { ...el, [prop]: value } : el);
-                const newData = { ...data, elements: newElements };
-                setData(newData);
-                setJsonText(JSON.stringify(newData, null, 2));
+                updateDataState({ ...data, elements: newElements });
             };
 
-            // OPTIMIZACIÓN CERO LAG: Uso de URL.createObjectURL en lugar de Base64
             const handleImageUpload = (e) => {
                 const file = e.target.files[0];
                 if (!file || !selectedId) return;
-                
-                // Genera un enlace local instantáneo y ligero
                 const objectUrl = URL.createObjectURL(file);
-                
                 const newElements = data.elements.map(el => {
-                    if (el.id === selectedId) {
-                        return { ...el, type: 'image', src: objectUrl, _originalType: el.type !== 'image' ? el.type : (el._originalType || 'rect') };
-                    }
+                    if (el.id === selectedId) return { ...el, type: 'image', src: objectUrl, _originalType: el.type !== 'image' ? el.type : (el._originalType || 'rect') };
                     return el;
                 });
-                const newData = { ...data, elements: newElements };
-                setData(newData);
-                setJsonText(JSON.stringify(newData, null, 2));
+                updateDataState({ ...data, elements: newElements });
             };
 
             const handleRemoveImage = () => {
@@ -319,22 +268,74 @@
                     }
                     return el;
                 });
-                const newData = { ...data, elements: newElements };
-                setData(newData);
-                setJsonText(JSON.stringify(newData, null, 2));
-                
-                const newAssets = {...imagesAssets};
-                delete newAssets[selectedId];
-                setImagesAssets(newAssets);
+                updateDataState({ ...data, elements: newElements });
+                const newAssets = {...imagesAssets}; delete newAssets[selectedId]; setImagesAssets(newAssets);
             };
+
+            // --- NUEVAS FUNCIONES DE LÍNEA DE TIEMPO Y KEYFRAMES ---
+            
+            const handleAddElement = (type = 'rect') => {
+                const newId = `capa_${Math.floor(Math.random() * 1000)}`;
+                const newElement = {
+                    id: newId, type: type, x: 540, y: 960, anchor: "center", animations: []
+                };
+                if(type === 'rect') { newElement.width = 300; newElement.height = 300; newElement.color = "#cbfb45"; newElement.borderRadius = 30; }
+                if(type === 'text') { newElement.text = "NUEVO TEXTO"; newElement.fontSize = 60; newElement.color = "#ffffff"; }
+                
+                updateDataState({ ...data, elements: [...data.elements, newElement] });
+                setSelectedId(newId);
+            };
+
+            const handleDeleteElement = () => {
+                if(!selectedId) return;
+                const newElements = data.elements.filter(el => el.id !== selectedId);
+                updateDataState({ ...data, elements: newElements });
+                setSelectedId(null);
+            };
+
+            const handleAddKeyframe = () => {
+                if(!selectedId) return;
+                const newElements = data.elements.map(el => {
+                    if (el.id === selectedId) {
+                        const newAnims = [...(el.animations || []), { prop: "y", from: 0, to: 100, start: 0, end: 1, ease: "easeOut" }];
+                        return { ...el, animations: newAnims };
+                    }
+                    return el;
+                });
+                updateDataState({ ...data, elements: newElements });
+            };
+
+            const handleUpdateKeyframe = (index, field, value) => {
+                if(!selectedId) return;
+                const newElements = data.elements.map(el => {
+                    if (el.id === selectedId) {
+                        const newAnims = [...el.animations];
+                        let finalValue = value;
+                        if (['from', 'to', 'start', 'end'].includes(field)) finalValue = parseFloat(value) || 0;
+                        newAnims[index] = { ...newAnims[index], [field]: finalValue };
+                        return { ...el, animations: newAnims };
+                    }
+                    return el;
+                });
+                updateDataState({ ...data, elements: newElements });
+            };
+
+            const handleDeleteKeyframe = (index) => {
+                if(!selectedId) return;
+                const newElements = data.elements.map(el => {
+                    if (el.id === selectedId) {
+                        const newAnims = el.animations.filter((_, i) => i !== index);
+                        return { ...el, animations: newAnims };
+                    }
+                    return el;
+                });
+                updateDataState({ ...data, elements: newElements });
+            };
+            // -----------------------------------------------------
 
             const handleExport = async () => {
                 if (!canvasRef.current) return;
-                setSelectedId(null);
-                setIsPlaying(false);
-                setIsExporting(true);
-                setTime(0);
-
+                setSelectedId(null); setIsPlaying(false); setIsExporting(true); setTime(0);
                 await new Promise(r => setTimeout(r, 50));
 
                 const stream = canvasRef.current.captureStream(data.config.fps);
@@ -345,29 +346,20 @@
                 mediaRecorder.onstop = () => {
                     const blob = new Blob(chunks, { type: 'video/webm' });
                     const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a'); a.href = url; a.download = `techexchange_render_${Date.now()}.webm`; a.click();
-                    setIsExporting(false);
-                    setTime(0);
-                    renderCanvas(0);
+                    const a = document.createElement('a'); a.href = url; a.download = `render_${Date.now()}.webm`; a.click();
+                    setIsExporting(false); setTime(0); renderCanvas(0);
                 };
 
                 mediaRecorder.start();
-
                 let startTime = performance.now();
                 let exportFrameId;
 
                 const exportLoop = (now) => {
                     const elapsedTime = ((now - startTime) / 1000) * playbackSpeed;
-                    if (elapsedTime > data.config.duration) {
-                        mediaRecorder.stop();
-                        cancelAnimationFrame(exportFrameId);
-                        return;
-                    }
-                    setTime(elapsedTime);
-                    renderCanvas(elapsedTime);
+                    if (elapsedTime > data.config.duration) { mediaRecorder.stop(); cancelAnimationFrame(exportFrameId); return; }
+                    setTime(elapsedTime); renderCanvas(elapsedTime);
                     exportFrameId = requestAnimationFrame(exportLoop);
                 };
-
                 exportFrameId = requestAnimationFrame(exportLoop);
             };
 
@@ -379,155 +371,175 @@
             const selectedElement = data.elements.find(el => el.id === selectedId);
 
             return (
-                // Diseño Responsivo: Columnas en escritorio, Apilado en móviles
                 <div className="flex flex-col lg:flex-row h-screen w-full bg-slate-950 overflow-y-auto lg:overflow-hidden">
                     
-                    {/* PANEL CENTRAL: CANVAS & REPRODUCTOR (Se muestra PRIMERO en móviles) */}
+                    {/* PANEL CENTRAL: CANVAS, REPRODUCTOR Y LÍNEA DE TIEMPO */}
                     <div className="order-1 lg:order-2 w-full lg:flex-1 flex flex-col relative min-h-[60vh] lg:h-full border-b lg:border-b-0 border-slate-800">
-                        {isExporting && (
-                            <div className="absolute inset-0 bg-black/90 z-50 flex items-center justify-center flex-col backdrop-blur-md">
-                                <i className="fas fa-compact-disc animate-spin text-4xl lg:text-5xl text-amber-500 mb-4 lg:mb-6"></i>
-                                <h2 className="text-xl lg:text-2xl font-bold tracking-tight">Renderizando Producción...</h2>
-                                <p className="text-slate-400 mt-2 font-mono text-xs lg:text-sm text-center px-4">Grabando a {data.config.fps} FPS puros | Velocidad: {playbackSpeed}x</p>
-                            </div>
-                        )}
                         
-                        {/* Contenedor del Canvas ajustado para no desbordar */}
-                        <div className="flex-1 flex items-center justify-center p-4 lg:p-8 overflow-hidden relative">
-                            <div className="relative shadow-2xl shadow-indigo-900/10 border border-slate-800 rounded-lg overflow-hidden bg-black h-full max-h-[80vh] aspect-[9/16]">
-                                <canvas 
-                                    ref={canvasRef} 
-                                    width={data.config.width} 
-                                    height={data.config.height} 
-                                    onClick={handleCanvasClick}
-                                    className="w-full h-full object-contain cursor-crosshair"
-                                ></canvas>
+                        {/* CANVAS */}
+                        <div className="flex-1 flex items-center justify-center p-4 overflow-hidden relative">
+                            {isExporting && (
+                                <div className="absolute inset-0 bg-black/90 z-50 flex items-center justify-center flex-col backdrop-blur-md">
+                                    <i className="fas fa-compact-disc animate-spin text-4xl text-amber-500 mb-4"></i>
+                                    <h2 className="text-xl font-bold">Renderizando...</h2>
+                                </div>
+                            )}
+                            <div className="relative shadow-2xl shadow-indigo-900/10 border border-slate-800 rounded-lg overflow-hidden bg-black h-full max-h-[70vh] aspect-[9/16]">
+                                <canvas ref={canvasRef} width={data.config.width} height={data.config.height} onClick={handleCanvasClick} className="w-full h-full object-contain cursor-crosshair"></canvas>
                             </div>
                         </div>
 
-                        {/* REPRODUCTOR LÍQUIDO */}
-                        <div className="bg-slate-900 border-t border-slate-800 px-4 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-4 z-10">
-                            <div className="flex items-center space-x-3 lg:space-x-6">
-                                <button onClick={() => setTime(0)} className="text-slate-400 hover:text-white text-lg lg:text-xl transition-colors"><i className="fas fa-backward-step"></i></button>
-                                <button onClick={() => setIsPlaying(!isPlaying)} className="w-10 h-10 lg:w-12 lg:h-12 bg-amber-500 hover:bg-amber-400 rounded-full text-black flex items-center justify-center text-lg lg:text-xl shadow-lg transition-transform hover:scale-105">
+                        {/* REPRODUCTOR */}
+                        <div className="bg-slate-900 border-t border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-4 z-10">
+                            <div className="flex items-center space-x-3">
+                                <button onClick={() => setTime(0)} className="text-slate-400 hover:text-white text-lg"><i className="fas fa-backward-step"></i></button>
+                                <button onClick={() => setIsPlaying(!isPlaying)} className="w-10 h-10 bg-amber-500 hover:bg-amber-400 rounded-full text-black flex items-center justify-center text-lg shadow-lg">
                                     <i className={`fas ${isPlaying ? 'fa-pause' : 'fa-play ml-1'}`}></i>
                                 </button>
-                                <span className="font-mono text-amber-500 text-xs lg:text-sm font-bold bg-slate-950 px-2 lg:px-3 py-1.5 rounded-lg border border-slate-800">
+                                <span className="font-mono text-amber-500 text-xs font-bold bg-slate-950 px-2 py-1 rounded border border-slate-800">
                                     {time.toFixed(2)}s / {data.config.duration}s
                                 </span>
                             </div>
-                            {/* Botón de exportar visible en móviles */}
-                            <button onClick={handleExport} className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold px-4 lg:px-6 py-2 lg:py-3 rounded-lg shadow-lg flex items-center justify-center space-x-2 transition-all text-sm lg:text-base">
-                                <i className="fas fa-video"></i>
-                                <span>Exportar Master</span>
+                            <button onClick={handleExport} className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-4 py-2 rounded shadow-lg flex items-center justify-center space-x-2 text-sm">
+                                <i className="fas fa-video"></i> <span>Exportar</span>
                             </button>
+                        </div>
+
+                        {/* LÍNEA DE TIEMPO / CAPAS (NUEVO) */}
+                        <div className="bg-slate-950 h-48 border-t border-slate-800 flex flex-col">
+                            <div className="flex justify-between items-center p-2 border-b border-slate-800 bg-slate-900">
+                                <span className="text-xs font-bold text-amber-500"><i className="fas fa-layer-group mr-2"></i>LÍNEA DE TIEMPO / CLIPS</span>
+                                <div className="space-x-2 flex">
+                                    <button onClick={() => handleAddElement('rect')} className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-[10px] px-2 py-1 rounded"><i className="fas fa-square mr-1"></i>+ Forma</button>
+                                    <button onClick={() => handleAddElement('text')} className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-[10px] px-2 py-1 rounded"><i className="fas fa-font mr-1"></i>+ Texto</button>
+                                    {selectedId && <button onClick={handleDeleteElement} className="bg-red-900 hover:bg-red-800 text-red-200 text-[10px] px-2 py-1 rounded border border-red-800"><i className="fas fa-trash mr-1"></i>Eliminar Capa</button>}
+                                </div>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                                {data.elements.map(el => (
+                                    <div key={el.id} onClick={() => setSelectedId(el.id)} className={`flex justify-between items-center p-2 rounded cursor-pointer text-xs border ${selectedId === el.id ? 'bg-slate-800 border-amber-500' : 'bg-slate-900 border-slate-800 hover:bg-slate-800'}`}>
+                                        <div className="flex items-center">
+                                            <i className={`fas ${el.type === 'image' ? 'fa-image text-emerald-400' : el.type === 'text' ? 'fa-font text-blue-400' : 'fa-square text-purple-400'} mr-3`}></i>
+                                            <span className="font-mono text-white truncate max-w-[150px]">{el.id}</span>
+                                        </div>
+                                        <div className="text-slate-500 font-mono text-[10px]">{el.animations?.length || 0} anims</div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
-                    {/* PANEL DERECHO: INSPECTOR VISUAL (Se muestra SEGUNDO en móviles) */}
-                    <div className="order-2 lg:order-3 w-full lg:w-1/4 min-h-[40vh] lg:h-full bg-slate-900 border-b lg:border-b-0 lg:border-l border-slate-800 flex flex-col z-20 shadow-2xl overflow-y-auto">
-                        <div className="p-4 bg-slate-950 border-b border-slate-800 sticky top-0 z-10">
-                            <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-sliders mr-2"></i>PROPIEDADES</h2>
+                    {/* PANEL DERECHO: INSPECTOR Y KEYFRAMES (ACTUALIZADO) */}
+                    <div className="order-2 lg:order-3 w-full lg:w-[350px] min-h-[40vh] lg:h-full bg-slate-900 lg:border-l border-slate-800 flex flex-col z-20 overflow-y-auto">
+                        <div className="p-4 bg-slate-950 border-b border-slate-800 sticky top-0 z-10 flex justify-between items-center">
+                            <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-sliders mr-2"></i>INSPECTOR</h2>
                         </div>
                         
-                        <div className="p-4 lg:p-6">
+                        <div className="p-4">
                             {!selectedId ? (
-                                <div className="text-center py-10 opacity-50">
-                                    <i className="fas fa-mouse-pointer text-4xl mb-4 text-slate-500"></i>
-                                    <p className="text-sm">Toca un elemento en el lienzo (arriba) para editarlo visualmente.</p>
-                                </div>
+                                <div className="text-center py-10 opacity-50"><p className="text-sm">Selecciona una capa en la línea de tiempo o lienzo.</p></div>
                             ) : (
-                                <div className="space-y-6">
-                                    <div className="flex justify-between items-center border-b border-slate-800 pb-4">
-                                        <div className="overflow-hidden">
-                                            <span className="text-xs text-slate-500 block uppercase tracking-wider">Elemento</span>
-                                            <span className="font-bold text-base lg:text-lg text-emerald-400 truncate">{selectedElement?.id}</span>
-                                        </div>
-                                        <div className="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700">{selectedElement?.type}</div>
-                                    </div>
+                                <div className="space-y-4">
+                                    <div className="bg-slate-800 text-xs px-2 py-1 rounded inline-block text-emerald-400 mb-2">{selectedElement?.id}</div>
 
-                                    {/* CARGA DE ARCHIVOS SIN LAG */}
-                                    <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
-                                        <label className="text-xs font-bold text-slate-400 mb-3 flex items-center">
-                                            <i className="fas fa-image mr-2"></i> Reemplazar por Archivo Local
-                                        </label>
-                                        
-                                        <label className="flex items-center justify-center w-full h-20 lg:h-24 px-4 transition bg-slate-900 border-2 border-slate-700 border-dashed rounded-md appearance-none cursor-pointer hover:border-amber-500 focus:outline-none mb-3">
-                                            <span className="flex items-center space-x-2">
-                                                <i className="fas fa-upload text-slate-400"></i>
-                                                <span className="font-medium text-slate-400 text-xs lg:text-sm">Subir PNG / JPG</span>
-                                            </span>
+                                    {/* Edición de Textos o Colores */}
+                                    {selectedElement?.type === 'text' && (
+                                        <div>
+                                            <label className="text-xs text-slate-400 mb-1 block">Editar Texto</label>
+                                            <input type="text" value={selectedElement.text} onChange={(e) => updateElementProperty('text', e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-sm text-white outline-none focus:border-amber-500" />
+                                        </div>
+                                    )}
+                                    {selectedElement?.type !== 'image' && (
+                                        <div>
+                                            <label className="text-xs text-slate-400 mb-1 block">Color Hex</label>
+                                            <input type="text" value={selectedElement.color || '#ffffff'} onChange={(e) => updateElementProperty('color', e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-sm text-white outline-none focus:border-amber-500" />
+                                        </div>
+                                    )}
+
+                                    {/* Carga de PNGs */}
+                                    <div className="bg-slate-950 p-3 rounded border border-slate-800">
+                                        <label className="flex items-center justify-center w-full h-12 bg-slate-900 border border-slate-700 border-dashed rounded cursor-pointer hover:border-amber-500 mb-2">
+                                            <span className="text-slate-400 text-xs"><i className="fas fa-upload mr-2"></i>Subir PNG/JPG</span>
                                             <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
                                         </label>
-
                                         {selectedElement?.type === 'image' && (
-                                            <button onClick={handleRemoveImage} className="w-full bg-red-900/50 hover:bg-red-800/80 text-red-300 text-xs py-3 rounded border border-red-800 transition-colors flex items-center justify-center">
-                                                <i className="fas fa-trash-can mr-2"></i> Borrar Imagen y Revertir
-                                            </button>
+                                            <button onClick={handleRemoveImage} className="w-full bg-red-900/40 text-red-300 text-xs py-1 rounded border border-red-800"><i className="fas fa-trash-can mr-2"></i>Borrar Imagen</button>
                                         )}
                                     </div>
 
-                                    <div className="space-y-4">
+                                    {/* Posiciones Básicas */}
+                                    <div className="grid grid-cols-2 gap-2">
                                         <div>
-                                            <label className="text-xs text-slate-400 flex justify-between mb-1">
-                                                <span>Posición X</span>
-                                                <span>{selectedElement?.x || 0}</span>
-                                            </label>
-                                            <input type="range" min="0" max="1080" value={selectedElement?.x || 0} onChange={(e) => updateElementProperty('x', parseInt(e.target.value))} className="w-full" />
+                                            <label className="text-[10px] text-slate-400">X: {selectedElement?.x}</label>
+                                            <input type="range" min="-500" max="1500" value={selectedElement?.x || 0} onChange={(e) => updateElementProperty('x', parseInt(e.target.value))} className="w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] text-slate-400">Y: {selectedElement?.y}</label>
+                                            <input type="range" min="-500" max="2500" value={selectedElement?.y || 0} onChange={(e) => updateElementProperty('y', parseInt(e.target.value))} className="w-full" />
+                                        </div>
+                                        {(selectedElement?.type === 'rect' || selectedElement?.type === 'image') && (
+                                            <>
+                                                <div><label className="text-[10px] text-slate-400">Ancho</label><input type="number" value={selectedElement?.width || 0} onChange={(e) => updateElementProperty('width', parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-700 text-white text-xs p-1 rounded" /></div>
+                                                <div><label className="text-[10px] text-slate-400">Alto</label><input type="number" value={selectedElement?.height || 0} onChange={(e) => updateElementProperty('height', parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-700 text-white text-xs p-1 rounded" /></div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* ANIMACIONES (KEYFRAMES MANAGER) NUEVO */}
+                                    <div className="mt-6 border-t border-slate-800 pt-4">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <span className="text-xs font-bold text-amber-500"><i className="fas fa-film mr-2"></i>KEYFRAMES</span>
+                                            <button onClick={handleAddKeyframe} className="text-emerald-400 text-xs hover:text-emerald-300"><i className="fas fa-plus"></i> Añadir</button>
                                         </div>
                                         
-                                        <div>
-                                            <label className="text-xs text-slate-400 flex justify-between mb-1">
-                                                <span>Posición Y</span>
-                                                <span>{selectedElement?.y || 0}</span>
-                                            </label>
-                                            <input type="range" min="0" max="1920" value={selectedElement?.y || 0} onChange={(e) => updateElementProperty('y', parseInt(e.target.value))} className="w-full" />
+                                        <div className="space-y-2">
+                                            {selectedElement?.animations?.map((anim, idx) => (
+                                                <div key={idx} className="bg-slate-950 p-2 rounded border border-slate-800 relative">
+                                                    <button onClick={() => handleDeleteKeyframe(idx)} className="absolute top-1 right-2 text-red-500 hover:text-red-400 text-xs"><i className="fas fa-times"></i></button>
+                                                    <div className="grid grid-cols-2 gap-2 mb-2 pr-4">
+                                                        <div>
+                                                            <label className="text-[9px] text-slate-500">Propiedad</label>
+                                                            <select value={anim.prop} onChange={(e) => handleUpdateKeyframe(idx, 'prop', e.target.value)} className="keyframe-input">
+                                                                <option value="x">Posición X</option><option value="y">Posición Y</option>
+                                                                <option value="scale">Escala</option><option value="rotation">Rotación</option>
+                                                                <option value="opacity">Opacidad</option><option value="color">Color</option>
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[9px] text-slate-500">Ease (Suavizado)</label>
+                                                            <select value={anim.ease || 'linear'} onChange={(e) => handleUpdateKeyframe(idx, 'ease', e.target.value)} className="keyframe-input">
+                                                                <option value="linear">Lineal</option><option value="easeOut">Ease Out</option><option value="easeOutBounce">Rebote</option><option value="easeInOut">Suave Ent/Sal</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-4 gap-1">
+                                                        <div><label className="text-[9px] text-slate-500">De</label><input type="text" value={anim.from} onChange={(e) => handleUpdateKeyframe(idx, 'from', e.target.value)} className="keyframe-input" /></div>
+                                                        <div><label className="text-[9px] text-slate-500">A</label><input type="text" value={anim.to} onChange={(e) => handleUpdateKeyframe(idx, 'to', e.target.value)} className="keyframe-input" /></div>
+                                                        <div><label className="text-[9px] text-slate-500">Inicio (s)</label><input type="number" step="0.1" value={anim.start} onChange={(e) => handleUpdateKeyframe(idx, 'start', e.target.value)} className="keyframe-input text-amber-200" /></div>
+                                                        <div><label className="text-[9px] text-slate-500">Fin (s)</label><input type="number" step="0.1" value={anim.end} onChange={(e) => handleUpdateKeyframe(idx, 'end', e.target.value)} className="keyframe-input text-amber-200" /></div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {(!selectedElement?.animations || selectedElement.animations.length === 0) && (
+                                                <div className="text-center text-[10px] text-slate-500 py-2">Sin animaciones. Elemento estático.</div>
+                                            )}
                                         </div>
-
-                                        {(selectedElement?.type === 'rect' || selectedElement?.type === 'image') && (
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="text-xs text-slate-400 block mb-1">Ancho</label>
-                                                    <input type="number" value={selectedElement?.width || 0} onChange={(e) => updateElementProperty('width', parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-sm text-white focus:border-amber-500 outline-none" />
-                                                </div>
-                                                <div>
-                                                    <label className="text-xs text-slate-400 block mb-1">Alto</label>
-                                                    <input type="number" value={selectedElement?.height || 0} onChange={(e) => updateElementProperty('height', parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-sm text-white focus:border-amber-500 outline-none" />
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
+
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* PANEL IZQUIERDO: JSON & CONTROLES (Se muestra TERCERO en móviles, abajo del todo) */}
-                    <div className="order-3 lg:order-1 w-full lg:w-1/4 min-h-[40vh] lg:h-full bg-slate-900 lg:border-r border-slate-800 flex flex-col shadow-2xl z-20">
-                        <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between sticky top-0">
-                            <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-code mr-2"></i>SOURCE CODE</h2>
-                        </div>
-                        
-                        <textarea 
-                            value={jsonText} 
-                            onChange={handleJsonChange}
-                            className="flex-1 bg-slate-900 p-4 text-emerald-400 font-mono text-xs focus:outline-none resize-none leading-relaxed min-h-[200px]"
-                            spellCheck="false"
-                        ></textarea>
-                        
+                    {/* PANEL IZQUIERDO: JSON & VELOCIDAD */}
+                    <div className="order-3 lg:order-1 w-full lg:w-1/4 min-h-[40vh] lg:h-full bg-slate-900 lg:border-r border-slate-800 flex flex-col z-20">
+                        <div className="p-4 bg-slate-950 border-b border-slate-800 sticky top-0"><h2 className="font-bold text-amber-500 text-sm"><i className="fas fa-code mr-2"></i>CÓDIGO</h2></div>
+                        <textarea value={jsonText} onChange={handleJsonChange} className="flex-1 bg-slate-900 p-4 text-emerald-400 font-mono text-[10px] focus:outline-none resize-none" spellCheck="false"></textarea>
                         <div className="p-4 bg-slate-950 border-t border-slate-800">
-                            <label className="text-xs font-bold text-slate-400 flex justify-between mb-2">
-                                <span><i className="fas fa-gauge-high mr-2"></i>Velocidad:</span>
-                                <span className="text-amber-500">{playbackSpeed.toFixed(1)}x</span>
-                            </label>
-                            <input 
-                                type="range" min="0.2" max="3.0" step="0.1" value={playbackSpeed} 
-                                onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))} 
-                                className="w-full cursor-pointer"
-                            />
+                            <label className="text-xs font-bold text-slate-400 flex justify-between mb-2"><span>Velocidad Global:</span><span className="text-amber-500">{playbackSpeed.toFixed(1)}x</span></label>
+                            <input type="range" min="0.2" max="3.0" step="0.1" value={playbackSpeed} onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))} className="w-full" />
                         </div>
                     </div>
-
                 </div>
             );
         }
