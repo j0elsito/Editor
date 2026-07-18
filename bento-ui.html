@@ -1,23 +1,19 @@
-
-
-GLM-4.7
-
-Share
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe Graphics Engine Pro 🎨 - UI Edition</title>
+    <title>Vibe Studio Suite | techexchange Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        body { background-color: #0f172a; color: white; margin: 0; font-family: monospace; }
-        ::-webkit-scrollbar { width: 8px; }
+        body { background-color: #020617; color: #f1f5f9; font-family: 'Inter', sans-serif; overflow: hidden; }
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        input[type="range"] { accent-color: #cbfb45; }
     </style>
 </head>
 <body>
@@ -26,121 +22,44 @@ Share
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // JSON de Ejemplo: Un anuncio de TechExchange con Botones Profesionales y UI Cards
+        // JSON Por defecto: Tema de reparación para probar reemplazo de Emojis por Fotos
         const initialJSON = {
-          "config": {
-            "width": 1080,
-            "height": 1920,
-            "fps": 60,
-            "duration": 6.5,
-            "background": "#f8fafc"
-          },
+          "config": { "width": 1080, "height": 1920, "fps": 60, "duration": 5.0, "background": "#0f172a" },
           "elements": [
             {
-              "id": "ui_card_sombra",
-              "type": "rect",
-              "x": 540,
-              "y": 960,
-              "width": 850,
-              "height": 1200,
-              "borderRadius": 80,
-              "color": "#000000",
-              "anchor": "center",
-              "blur": 80,
-              "opacity": 0,
+              "id": "halo_fondo", "type": "circle", "x": 540, "y": 960, "radius": 400, "color": "#1e293b", "blur": 100,
+              "animations": [ { "prop": "scale", "from": 0, "to": 1.5, "start": 0, "end": 2, "ease": "easeOut" } ]
+            },
+            {
+              "id": "telefono_cliente", "type": "image", "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4f1.svg",
+              "x": 540, "y": 960, "width": 450, "height": 450, "anchor": "center", "shadowBlur": 40, "shadowColor": "#cbfb45",
               "animations": [
-                { "prop": "y", "from": 2500, "to": 980, "start": 0.2, "end": 1.5, "ease": "easeOutBounce" },
-                { "prop": "opacity", "from": 0, "to": 0.15, "start": 0.5, "end": 1.5, "ease": "linear" }
+                { "prop": "y", "from": -200, "to": 960, "start": 0.5, "end": 1.5, "ease": "easeOutBounce" },
+                { "prop": "rotation", "from": -45, "to": 0, "start": 0.5, "end": 1.5, "ease": "easeOutBounce" }
               ]
             },
             {
-              "id": "ui_card_blanca",
-              "type": "rect",
-              "x": 540,
-              "y": 960,
-              "width": 850,
-              "height": 1200,
-              "borderRadius": 80,
-              "color": "#ffffff",
-              "anchor": "center",
+              "id": "mano_reparadora_izq", "type": "image", "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/270b.svg",
+              "x": 200, "y": 1400, "width": 250, "height": 250, "anchor": "center",
               "animations": [
-                { "prop": "y", "from": 2500, "to": 960, "start": 0.2, "end": 1.5, "ease": "easeOutBounce" }
+                { "prop": "x", "from": -200, "to": 300, "start": 1.5, "end": 2.2, "ease": "easeOutBounce" },
+                { "prop": "y", "from": 1400, "to": 1100, "start": 1.5, "end": 2.2, "ease": "easeOutBounce" },
+                { "prop": "rotation", "from": -90, "to": 15, "start": 1.5, "end": 2.2, "ease": "easeOut" }
               ]
             },
             {
-              "id": "icono_logo",
-              "type": "image",
-              "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f527.svg",
-              "x": 540,
-              "y": 650,
-              "width": 250,
-              "height": 250,
-              "anchor": "center",
+              "id": "mano_reparadora_der", "type": "image", "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/270b.svg",
+              "x": 880, "y": 1400, "width": 250, "height": 250, "anchor": "center",
               "animations": [
-                { "prop": "scale", "from": 0, "to": 1, "start": 1.0, "end": 2.0, "ease": "easeOutBounce" },
-                { "prop": "rotation", "from": -90, "to": 0, "start": 1.0, "end": 2.0, "ease": "easeOut" }
+                { "prop": "x", "from": 1280, "to": 780, "start": 1.7, "end": 2.4, "ease": "easeOutBounce" },
+                { "prop": "y", "from": 1400, "to": 1100, "start": 1.7, "end": 2.4, "ease": "easeOutBounce" },
+                { "prop": "rotation", "from": 90, "to": -15, "start": 1.7, "end": 2.4, "ease": "easeOut" }
               ]
             },
             {
-              "id": "texto_titulo",
-              "type": "text",
-              "text": "TechExchange",
-              "x": 540,
-              "y": 950,
-              "fontSize": 90,
-              "fontFamily": "system-ui, -apple-system, sans-serif",
-              "color": "#0f172a",
-              "opacity": 0,
+              "id": "marca", "type": "text", "text": "techexchange", "x": 540, "y": 300, "fontSize": 80, "color": "#ffffff",
               "animations": [
-                { "prop": "opacity", "from": 0, "to": 1, "start": 1.8, "end": 2.2, "ease": "linear" },
-                { "prop": "y", "from": 1000, "to": 950, "start": 1.8, "end": 2.5, "ease": "easeOut" }
-              ]
-            },
-            {
-              "id": "texto_descripcion",
-              "type": "text",
-              "text": "Reparación exprés en 45 min",
-              "x": 540,
-              "y": 1050,
-              "fontSize": 45,
-              "fontFamily": "system-ui, -apple-system, sans-serif",
-              "color": "#64748b",
-              "opacity": 0,
-              "animations": [
-                { "prop": "opacity", "from": 0, "to": 1, "start": 2.0, "end": 2.4, "ease": "linear" },
-                { "prop": "y", "from": 1100, "to": 1050, "start": 2.0, "end": 2.7, "ease": "easeOut" }
-              ]
-            },
-            {
-              "id": "btn_fondo_whatsapp",
-              "type": "rect",
-              "x": 540,
-              "y": 1300,
-              "width": 650,
-              "height": 160,
-              "borderRadius": 80,
-              "color": "#10b981",
-              "anchor": "center",
-              "shadowBlur": 0,
-              "shadowColor": "#10b981",
-              "scale": 0,
-              "animations": [
-                { "prop": "scale", "from": 0, "to": 1, "start": 2.8, "end": 3.6, "ease": "easeOutBounce" },
-                { "prop": "shadowBlur", "from": 0, "to": 40, "start": 3.6, "end": 4.5, "ease": "easeOutBounce" }
-              ]
-            },
-            {
-              "id": "btn_texto",
-              "type": "text",
-              "text": "Agendar Cita",
-              "x": 540,
-              "y": 1300,
-              "fontSize": 55,
-              "fontFamily": "system-ui, -apple-system, sans-serif",
-              "color": "#ffffff",
-              "scale": 0,
-              "animations": [
-                { "prop": "scale", "from": 0, "to": 1, "start": 2.8, "end": 3.6, "ease": "easeOutBounce" }
+                { "prop": "opacity", "from": 0, "to": 1, "start": 2.5, "end": 3.0, "ease": "linear" }
               ]
             }
           ]
@@ -165,61 +84,44 @@ Share
         };
 
         const interpolateColor = (color1, color2, factor) => {
-            const c1 = hexToRgb(color1);
-            const c2 = hexToRgb(color2);
-            const r = Math.round(c1.r + factor * (c2.r - c1.r));
-            const g = Math.round(c1.g + factor * (c2.g - c1.g));
-            const b = Math.round(c1.b + factor * (c2.b - c1.b));
-            return `rgb(${r}, ${g}, ${b})`;
+            const c1 = hexToRgb(color1); const c2 = hexToRgb(color2);
+            return `rgb(${Math.round(c1.r + factor * (c2.r - c1.r))}, ${Math.round(c1.g + factor * (c2.g - c1.g))}, ${Math.round(c1.b + factor * (c2.b - c1.b))})`;
         };
 
         function App() {
-            const [jsonText, setJsonText] = useState(JSON.stringify(initialJSON, null, 2));
             const [data, setData] = useState(initialJSON);
+            const [jsonText, setJsonText] = useState(JSON.stringify(initialJSON, null, 2));
             const [time, setTime] = useState(0);
             const [isPlaying, setIsPlaying] = useState(false);
             const [isExporting, setIsExporting] = useState(false);
+            const [playbackSpeed, setPlaybackSpeed] = useState(1.0); // NUEVO: Velocidad Global
+            const [selectedId, setSelectedId] = useState(null);
             const [imagesAssets, setImagesAssets] = useState({});
-            const [isLoadingAssets, setIsLoadingAssets] = useState(true);
             
             const canvasRef = useRef(null);
             const animRef = useRef(null);
+            const containerRef = useRef(null);
 
+            // PRELOADER
             const loadImages = async (elements) => {
-                setIsLoadingAssets(true);
-                const loaded = {};
-                const imgElements = elements.filter(el => el.type === 'image' && el.src);
-                
-                const promises = imgElements.map(el => {
+                const loaded = { ...imagesAssets };
+                const promises = elements.filter(el => el.type === 'image' && el.src).map(el => {
                     return new Promise((resolve) => {
+                        if (loaded[el.id] && loaded[el.id].src === el.src) { resolve(); return; }
                         const img = new Image();
                         img.crossOrigin = "Anonymous";
                         img.onload = () => { loaded[el.id] = img; resolve(); };
-                        img.onerror = () => { console.warn(`Error imagen: ${el.src}`); resolve(); };
+                        img.onerror = () => { resolve(); };
                         img.src = el.src;
                     });
                 });
-
                 await Promise.all(promises);
                 setImagesAssets(loaded);
-                setIsLoadingAssets(false);
             };
 
-            const handleSync = () => {
-                try {
-                    const parsedData = JSON.parse(jsonText);
-                    setData(parsedData);
-                    setTime(0);
-                    loadImages(parsedData.elements);
-                } catch (e) {
-                    alert("Error en el JSON");
-                }
-            };
+            useEffect(() => { loadImages(data.elements); }, [data]);
 
-            useEffect(() => {
-                loadImages(data.elements);
-            }, []);
-
+            // MOTOR DE VALORES ANIMADOS
             const getAnimatedValue = (element, propName, defaultValue, currentT) => {
                 const anims = element.animations?.filter(a => a.prop === propName);
                 if (!anims || anims.length === 0) return defaultValue;
@@ -227,13 +129,9 @@ Share
                 let currentValue = anims[0].from;
                 for (const anim of anims) {
                     if (currentT < anim.start) continue;
-                    if (currentT >= anim.end) {
-                        currentValue = anim.to;
-                        continue;
-                    }
+                    if (currentT >= anim.end) { currentValue = anim.to; continue; }
                     const progress = (currentT - anim.start) / (anim.end - anim.start);
                     const easeFn = Easing[anim.ease || 'linear'] || Easing.linear;
-                    
                     if (propName.toLowerCase().includes('color')) {
                         currentValue = interpolateColor(anim.from, anim.to, easeFn(progress));
                     } else {
@@ -243,16 +141,16 @@ Share
                 return currentValue;
             };
 
+            // RENDERIZADOR NÚCLEO
             const renderCanvas = (currentT) => {
                 const canvas = canvasRef.current;
                 if (!canvas) return;
                 const ctx = canvas.getContext('2d');
-                const { config, elements } = data;
-
-                ctx.fillStyle = config.background || "black";
+                
+                ctx.fillStyle = data.config.background || "black";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                elements.forEach(el => {
+                data.elements.forEach(el => {
                     ctx.save();
                     
                     const x = getAnimatedValue(el, 'x', el.x || 0, currentT);
@@ -263,7 +161,6 @@ Share
                     const blur = getAnimatedValue(el, 'blur', el.blur || 0, currentT);
                     const grayscale = getAnimatedValue(el, 'grayscale', el.grayscale || 0, currentT);
                     const shadowBlur = getAnimatedValue(el, 'shadowBlur', el.shadowBlur || 0, currentT);
-                    
                     const color = el.type !== 'image' ? getAnimatedValue(el, 'color', el.color || "#ffffff", currentT) : null;
 
                     ctx.globalAlpha = Math.max(0, Math.min(1, opacity));
@@ -278,72 +175,74 @@ Share
                         ctx.shadowColor = getAnimatedValue(el, 'shadowColor', el.shadowColor || color || "#000000", currentT);
                     }
                     
+                    ctx.translate(x, y);
+                    ctx.rotate(rot * Math.PI / 180);
+                    ctx.scale(scale, scale);
+
                     if (el.type === 'image') {
                         const img = imagesAssets[el.id];
                         if (img) {
                             const w = getAnimatedValue(el, 'width', el.width || img.width, currentT);
                             const h = getAnimatedValue(el, 'height', el.height || img.height, currentT);
-                            ctx.translate(x, y);
-                            ctx.rotate(rot * Math.PI / 180);
-                            ctx.scale(scale, scale);
-                            if (el.anchor === 'center') {
-                                ctx.drawImage(img, -w/2, -h/2, w, h);
-                            } else {
-                                ctx.drawImage(img, 0, 0, w, h);
-                            }
+                            if (el.anchor === 'center') ctx.drawImage(img, -w/2, -h/2, w, h);
+                            else ctx.drawImage(img, 0, 0, w, h);
                         }
                     }
                     else if (el.type === 'rect') {
                         const w = getAnimatedValue(el, 'width', el.width, currentT);
                         const h = getAnimatedValue(el, 'height', el.height, currentT);
-                        const radius = getAnimatedValue(el, 'borderRadius', el.borderRadius || 0, currentT); // NUEVO: BORDES REDONDEADOS
-                        
-                        ctx.translate(x, y);
-                        ctx.rotate(rot * Math.PI / 180);
-                        ctx.scale(scale, scale);
+                        const radius = getAnimatedValue(el, 'borderRadius', el.borderRadius || 0, currentT);
                         ctx.fillStyle = color;
-                        
                         ctx.beginPath();
                         if (el.anchor === 'center') {
-                            if (radius > 0) ctx.roundRect(-w/2, -h/2, w, h, radius);
-                            else ctx.rect(-w/2, -h/2, w, h);
+                            if (radius > 0) ctx.roundRect(-w/2, -h/2, w, h, radius); else ctx.rect(-w/2, -h/2, w, h);
                         } else {
-                            if (radius > 0) ctx.roundRect(0, 0, w, h, radius);
-                            else ctx.rect(0, 0, w, h);
+                            if (radius > 0) ctx.roundRect(0, 0, w, h, radius); else ctx.rect(0, 0, w, h);
                         }
                         ctx.fill();
                     } 
                     else if (el.type === 'circle') {
                         const r = getAnimatedValue(el, 'radius', el.radius, currentT);
-                        ctx.translate(x, y);
-                        ctx.scale(scale, scale);
+                        ctx.fillStyle = color;
                         ctx.beginPath();
                         ctx.arc(0, 0, r, 0, Math.PI * 2);
-                        ctx.fillStyle = color;
                         ctx.fill();
                     }
                     else if (el.type === 'text') {
-                        ctx.translate(x, y);
-                        ctx.scale(scale, scale);
                         ctx.fillStyle = color;
-                        // NUEVO: SOPORTE DE TIPOGRAFÍAS PARA TEXTOS Y BOTONES
-                        const font = el.fontFamily || "sans-serif";
-                        const weight = el.fontWeight || "bold";
-                        ctx.font = `${weight} ${el.fontSize}px ${font}`;
+                        ctx.font = `${el.fontWeight || 'bold'} ${el.fontSize}px ${el.fontFamily || 'sans-serif'}`;
                         ctx.textAlign = el.textAlign || "center";
                         ctx.textBaseline = "middle";
                         ctx.fillText(el.text, 0, 0);
+                    }
+
+                    // DIBUJAR CAJA DE SELECCIÓN (Solo UI)
+                    if (el.id === selectedId && !isExporting) {
+                        ctx.strokeStyle = "#cbfb45";
+                        ctx.lineWidth = 4 / scale; // Mantener grosor constante visualmente
+                        ctx.setLineDash([10 / scale, 10 / scale]);
+                        
+                        const w = el.width || (el.radius ? el.radius * 2 : 200);
+                        const h = el.height || (el.radius ? el.radius * 2 : 100);
+                        
+                        if (el.anchor === 'center' || el.type === 'circle' || el.type === 'text') {
+                            ctx.strokeRect(-w/2 - 10, -h/2 - 10, w + 20, h + 20);
+                        } else {
+                            ctx.strokeRect(-10, -10, w + 20, h + 20);
+                        }
                     }
 
                     ctx.restore();
                 });
             };
 
+            // BUCLE DE REPRODUCCIÓN (Afectado por Velocidad Global)
             useEffect(() => {
-                if (isPlaying && !isExporting && !isLoadingAssets) {
+                if (isPlaying && !isExporting) {
                     let lastTime = performance.now();
                     const loop = (now) => {
-                        const dt = (now - lastTime) / 1000;
+                        // Multiplicar el Delta Time por la velocidad seleccionada
+                        const dt = ((now - lastTime) / 1000) * playbackSpeed;
                         lastTime = now;
                         setTime(prev => {
                             const next = prev + dt;
@@ -356,23 +255,108 @@ Share
                     cancelAnimationFrame(animRef.current);
                 }
                 return () => cancelAnimationFrame(animRef.current);
-            }, [isPlaying, data.config.duration, isExporting, isLoadingAssets]);
+            }, [isPlaying, data.config.duration, isExporting, playbackSpeed]);
 
-            useEffect(() => {
-                if (!isExporting && !isLoadingAssets) {
-                    renderCanvas(time);
-                }
-            }, [time, data, isExporting, isLoadingAssets, imagesAssets]);
+            useEffect(() => { if (!isExporting) renderCanvas(time); }, [time, data, isExporting, selectedId, imagesAssets]);
 
-            const handleExport = async () => {
+            // SISTEMA DE SELECCIÓN (HIT-DETECTION)
+            const handleCanvasClick = (e) => {
                 const canvas = canvasRef.current;
-                if (!canvas || isLoadingAssets) return;
+                const rect = canvas.getBoundingClientRect();
+                
+                // Mapear coordenadas del mouse a la resolución interna del canvas (1080x1920)
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const clickX = (e.clientX - rect.left) * scaleX;
+                const clickY = (e.clientY - rect.top) * scaleY;
+                
+                // Buscar colisión desde el elemento más arriba (reverso)
+                let hitId = null;
+                for (let i = data.elements.length - 1; i >= 0; i--) {
+                    const el = data.elements[i];
+                    const x = getAnimatedValue(el, 'x', el.x || 0, time);
+                    const y = getAnimatedValue(el, 'y', el.y || 0, time);
+                    
+                    // Cálculo de bounding box aproximado
+                    const w = el.width || (el.radius ? el.radius * 2 : 300);
+                    const h = el.height || (el.radius ? el.radius * 2 : 100);
+                    
+                    let minX = el.anchor === 'center' || el.type === 'circle' || el.type === 'text' ? x - w/2 : x;
+                    let maxX = minX + w;
+                    let minY = el.anchor === 'center' || el.type === 'circle' || el.type === 'text' ? y - h/2 : y;
+                    let maxY = minY + h;
 
+                    if (clickX >= minX && clickX <= maxX && clickY >= minY && clickY <= maxY) {
+                        hitId = el.id;
+                        break;
+                    }
+                }
+                setSelectedId(hitId);
+            };
+
+            // ACTUALIZAR PROPIEDADES EN TIEMPO REAL
+            const updateElementProperty = (prop, value) => {
+                if(!selectedId) return;
+                const newElements = data.elements.map(el => el.id === selectedId ? { ...el, [prop]: value } : el);
+                const newData = { ...data, elements: newElements };
+                setData(newData);
+                setJsonText(JSON.stringify(newData, null, 2));
+            };
+
+            // SUBIR IMAGEN (Convierte cualquier elemento a Imagen)
+            const handleImageUpload = (e) => {
+                const file = e.target.files[0];
+                if (!file || !selectedId) return;
+                
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const newSrc = ev.target.result;
+                    const newElements = data.elements.map(el => {
+                        if (el.id === selectedId) {
+                            // Guardamos el tipo original por si el usuario borra la imagen
+                            return { ...el, type: 'image', src: newSrc, _originalType: el.type !== 'image' ? el.type : (el._originalType || 'rect') };
+                        }
+                        return el;
+                    });
+                    const newData = { ...data, elements: newElements };
+                    setData(newData);
+                    setJsonText(JSON.stringify(newData, null, 2));
+                };
+                reader.readAsDataURL(file);
+            };
+
+            // BORRAR IMAGEN (Revierte al tipo original)
+            const handleRemoveImage = () => {
+                if(!selectedId) return;
+                const newElements = data.elements.map(el => {
+                    if (el.id === selectedId) {
+                        const { src, _originalType, ...rest } = el;
+                        return { ...rest, type: _originalType || 'rect' }; // Vuelve a ser un rectángulo si no hay tipo previo
+                    }
+                    return el;
+                });
+                const newData = { ...data, elements: newElements };
+                setData(newData);
+                setJsonText(JSON.stringify(newData, null, 2));
+                
+                // Limpiar del caché de imágenes
+                const newAssets = {...imagesAssets};
+                delete newAssets[selectedId];
+                setImagesAssets(newAssets);
+            };
+
+            // EXPORTAR VIDEO SIN FALLOS
+            const handleExport = async () => {
+                if (!canvasRef.current) return;
+                setSelectedId(null); // Quitar selector antes de grabar
                 setIsPlaying(false);
                 setIsExporting(true);
                 setTime(0);
 
-                const stream = canvas.captureStream(data.config.fps);
+                // Esperamos 1 frame para asegurar que la caja de selección desapareció visualmente
+                await new Promise(r => setTimeout(r, 50));
+
+                const stream = canvasRef.current.captureStream(data.config.fps);
                 const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 15000000 });
                 const chunks = [];
                 
@@ -380,10 +364,7 @@ Share
                 mediaRecorder.onstop = () => {
                     const blob = new Blob(chunks, { type: 'video/webm' });
                     const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `techexchange_ui_ad_${Date.now()}.webm`;
-                    a.click();
+                    const a = document.createElement('a'); a.href = url; a.download = `techexchange_render_${Date.now()}.webm`; a.click();
                     setIsExporting(false);
                     setTime(0);
                     renderCanvas(0);
@@ -395,7 +376,8 @@ Share
                 let exportFrameId;
 
                 const exportLoop = (now) => {
-                    const elapsedTime = (now - startTime) / 1000;
+                    // Exportar respetando la velocidad global elegida
+                    const elapsedTime = ((now - startTime) / 1000) * playbackSpeed;
                     if (elapsedTime > data.config.duration) {
                         mediaRecorder.stop();
                         cancelAnimationFrame(exportFrameId);
@@ -409,58 +391,161 @@ Share
                 exportFrameId = requestAnimationFrame(exportLoop);
             };
 
+            // Sincronizar editor de texto con el Canvas
+            const handleJsonChange = (e) => {
+                setJsonText(e.target.value);
+                try { const parsed = JSON.parse(e.target.value); setData(parsed); } catch(err) {}
+            };
+
+            const selectedElement = data.elements.find(el => el.id === selectedId);
+
             return (
-                <div className="flex h-screen overflow-hidden">
-                    <div className="w-1/3 bg-slate-900 border-r border-slate-800 flex flex-col z-10 shadow-2xl">
-                        <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
-                            <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-layer-group mr-2"></i>UI ENGINE PRO</h2>
-                            <button onClick={handleSync} disabled={isLoadingAssets} className="bg-slate-800 border border-slate-700 hover:bg-slate-700 px-4 py-1.5 text-xs font-bold rounded transition-colors disabled:opacity-50">
-                                {isLoadingAssets ? <i className="fas fa-spinner fa-spin"></i> : <><i className="fas fa-rotate mr-2"></i>Sincronizar</>}
-                            </button>
+                <div className="flex h-screen overflow-hidden flex-row">
+                    
+                    {/* PANEL IZQUIERDO: JSON & CONTROLES GLOBALES */}
+                    <div className="w-1/4 bg-slate-900 border-r border-slate-800 flex flex-col shadow-2xl z-20">
+                        <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                            <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-code mr-2"></i>SOURCE CODE</h2>
                         </div>
                         <textarea 
                             value={jsonText} 
-                            onChange={(e) => setJsonText(e.target.value)}
+                            onChange={handleJsonChange}
                             className="flex-1 bg-slate-900 p-4 text-emerald-400 font-mono text-xs focus:outline-none resize-none leading-relaxed"
                             spellCheck="false"
                         ></textarea>
+                        
+                        {/* CONTROL DE VELOCIDAD GLOBAL */}
+                        <div className="p-4 bg-slate-950 border-t border-slate-800">
+                            <label className="text-xs font-bold text-slate-400 flex justify-between mb-2">
+                                <span><i className="fas fa-gauge-high mr-2"></i>Velocidad de Animación:</span>
+                                <span className="text-amber-500">{playbackSpeed.toFixed(1)}x</span>
+                            </label>
+                            <input 
+                                type="range" min="0.2" max="3.0" step="0.1" value={playbackSpeed} 
+                                onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))} 
+                                className="w-full cursor-pointer"
+                            />
+                        </div>
                     </div>
 
-                    <div className="w-2/3 flex flex-col bg-slate-950 relative">
+                    {/* PANEL CENTRAL: CANVAS & REPRODUCTOR */}
+                    <div className="flex-1 flex flex-col relative" ref={containerRef}>
                         {isExporting && (
-                            <div className="absolute inset-0 bg-black/85 z-50 flex items-center justify-center flex-col backdrop-blur-sm">
-                                <i className="fas fa-microchip animate-spin text-5xl text-amber-500 mb-6"></i>
-                                <h2 className="text-2xl font-bold tracking-tight">Renderizando Asset...</h2>
-                                <p className="text-slate-400 mt-2 font-mono text-sm">Grabando UI Components a {data.config.fps} FPS puros</p>
+                            <div className="absolute inset-0 bg-black/90 z-50 flex items-center justify-center flex-col backdrop-blur-md">
+                                <i className="fas fa-compact-disc animate-spin text-5xl text-amber-500 mb-6"></i>
+                                <h2 className="text-2xl font-bold tracking-tight">Renderizando Producción...</h2>
+                                <p className="text-slate-400 mt-2 font-mono text-sm">Grabando a {data.config.fps} FPS puros | Velocidad: {playbackSpeed}x</p>
                             </div>
                         )}
                         
-                        <div className="flex-1 flex items-center justify-center p-8 overflow-hidden">
-                            <div className="relative shadow-2xl shadow-indigo-900/20 border border-slate-800 rounded-lg overflow-hidden bg-black" style={{ height: '80vh', aspectRatio: '9/16' }}>
+                        <div className="flex-1 flex items-center justify-center p-8 overflow-hidden relative">
+                            <div className="relative shadow-2xl shadow-indigo-900/10 border border-slate-800 rounded-lg overflow-hidden bg-black" style={{ height: '80vh', aspectRatio: '9/16' }}>
                                 <canvas 
                                     ref={canvasRef} 
                                     width={data.config.width} 
                                     height={data.config.height} 
-                                    className="w-full h-full object-contain"
+                                    onClick={handleCanvasClick}
+                                    className="w-full h-full object-contain cursor-crosshair"
                                 ></canvas>
                             </div>
                         </div>
 
-                        <div className="h-20 bg-slate-900 border-t border-slate-800 px-8 flex items-center justify-between">
-                            <div className="flex items-center space-x-4">
+                        {/* REPRODUCTOR */}
+                        <div className="h-20 bg-slate-900 border-t border-slate-800 px-8 flex items-center justify-between z-10">
+                            <div className="flex items-center space-x-6">
                                 <button onClick={() => setTime(0)} className="text-slate-400 hover:text-white text-xl transition-colors"><i className="fas fa-backward-step"></i></button>
-                                <button onClick={() => setIsPlaying(!isPlaying)} disabled={isLoadingAssets} className="w-12 h-12 bg-amber-500 hover:bg-amber-400 rounded-full text-black flex items-center justify-center text-xl shadow-lg transition-transform hover:scale-105 disabled:opacity-50">
+                                <button onClick={() => setIsPlaying(!isPlaying)} className="w-12 h-12 bg-amber-500 hover:bg-amber-400 rounded-full text-black flex items-center justify-center text-xl shadow-lg transition-transform hover:scale-105">
                                     <i className={`fas ${isPlaying ? 'fa-pause' : 'fa-play ml-1'}`}></i>
                                 </button>
                                 <span className="font-mono text-amber-500 text-sm font-bold bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
                                     {time.toFixed(2)}s / {data.config.duration}s
                                 </span>
                             </div>
-
-                            <button onClick={handleExport} disabled={isLoadingAssets} className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold px-6 py-3 rounded-lg shadow-lg shadow-emerald-900/40 flex items-center space-x-2 transition-all disabled:opacity-50">
-                                <i className="fas fa-download"></i>
-                                <span>Exportar Video (Anti-Glitch)</span>
+                            <button onClick={handleExport} className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 transition-all">
+                                <i className="fas fa-video"></i>
+                                <span>Exportar Master</span>
                             </button>
+                        </div>
+                    </div>
+
+                    {/* PANEL DERECHO: INSPECTOR VISUAL */}
+                    <div className="w-1/4 bg-slate-900 border-l border-slate-800 flex flex-col z-20 shadow-2xl overflow-y-auto">
+                        <div className="p-4 bg-slate-950 border-b border-slate-800">
+                            <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-sliders mr-2"></i>PROPIEDADES</h2>
+                        </div>
+                        
+                        <div className="p-6">
+                            {!selectedId ? (
+                                <div className="text-center py-10 opacity-50">
+                                    <i className="fas fa-mouse-pointer text-4xl mb-4 text-slate-500"></i>
+                                    <p className="text-sm">Haz clic en un elemento del lienzo para editarlo visualmente.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    {/* CABECERA INSPECTOR */}
+                                    <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+                                        <div>
+                                            <span className="text-xs text-slate-500 block uppercase tracking-wider">Elemento Seleccionado</span>
+                                            <span className="font-bold text-lg text-emerald-400">{selectedElement?.id}</span>
+                                        </div>
+                                        <div className="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700">{selectedElement?.type}</div>
+                                    </div>
+
+                                    {/* CARGA DE ARCHIVOS (MAGIA) */}
+                                    <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
+                                        <label className="text-xs font-bold text-slate-400 mb-3 flex items-center">
+                                            <i className="fas fa-image mr-2"></i> Reemplazar por Archivo Local
+                                        </label>
+                                        
+                                        <label className="flex items-center justify-center w-full h-24 px-4 transition bg-slate-900 border-2 border-slate-700 border-dashed rounded-md appearance-none cursor-pointer hover:border-amber-500 focus:outline-none mb-3">
+                                            <span className="flex items-center space-x-2">
+                                                <i className="fas fa-upload text-slate-400"></i>
+                                                <span className="font-medium text-slate-400 text-sm">Subir PNG / JPG</span>
+                                            </span>
+                                            <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                                        </label>
+
+                                        {selectedElement?.type === 'image' && (
+                                            <button onClick={handleRemoveImage} className="w-full bg-red-900/50 hover:bg-red-800/80 text-red-300 text-xs py-2 rounded border border-red-800 transition-colors flex items-center justify-center">
+                                                <i className="fas fa-trash-can mr-2"></i> Borrar Imagen y Revertir Forma
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* CONTROLES RÁPIDOS */}
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-xs text-slate-400 flex justify-between mb-1">
+                                                <span>Posición X</span>
+                                                <span>{selectedElement?.x || 0}</span>
+                                            </label>
+                                            <input type="range" min="0" max="1080" value={selectedElement?.x || 0} onChange={(e) => updateElementProperty('x', parseInt(e.target.value))} className="w-full" />
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="text-xs text-slate-400 flex justify-between mb-1">
+                                                <span>Posición Y</span>
+                                                <span>{selectedElement?.y || 0}</span>
+                                            </label>
+                                            <input type="range" min="0" max="1920" value={selectedElement?.y || 0} onChange={(e) => updateElementProperty('y', parseInt(e.target.value))} className="w-full" />
+                                        </div>
+
+                                        {(selectedElement?.type === 'rect' || selectedElement?.type === 'image') && (
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-xs text-slate-400 block mb-1">Ancho</label>
+                                                    <input type="number" value={selectedElement?.width || 0} onChange={(e) => updateElementProperty('width', parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:border-amber-500 outline-none" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-slate-400 block mb-1">Alto</label>
+                                                    <input type="number" value={selectedElement?.height || 0} onChange={(e) => updateElementProperty('height', parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:border-amber-500 outline-none" />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -471,53 +556,4 @@ Share
         root.render(<App />);
     </script>
 </body>
-</html>  Show full message
-
-Thought Process
-Tu engine está sólido como concepto, pero tiene varios puntos de fricción que limitan su utilidad real. Te lo devuelvo mejorado con los siguientes cambios concretos:
-
-Problemas resueltos:
-
-Sin scrubber de timeline (solo botones de play/pause) → ahora arrastras el tiempo
-Export sin feedback visual → barra de progreso real con frames calculados
-Sin validación JSON → errores inline con línea del problema
-roundRect sin polyfill → fallback seguro para navegadores antiguos
-Sin atajos de teclado → Espacio = play/pause, R = reiniciar
-Sin lista de capas → panel lateral con los elementos ordenados por z-index
-Export con requestAnimationFrame que no garantiza FPS constante → frame-pumping preciso
-Sin indicador de formato de salida → muestra resolución, duración y FPS en el header
-Resumen de lo que cambió y por qué:
-
-Antes
-Ahora
-Razón
-Solo botones play/pause	Scrubber arrastrable con marcas de animación	Sin scrubber no puedes inspeccionar frames específicos, esencial para debuggear
-Export sin feedback	Barra de progreso con frame count real	La exportación tarda varios segundos, sin feedback parece que se colgó
-Error JSON en alert()	Validador inline con línea aproximada del error	Los alerts bloquean el flujo y no dan contexto de dónde está el error
-roundRect directo	Polyfill con quadraticCurveTo	Safari < 15.4 y Firefox < 112 no tienen roundRect nativo
-Sin atajos	Espacio = play/pause, R = reset	Ergonomía básica en cualquier herramienta de timeline
-Sin lista de elementos	Panel de capas con iconos por tipo	Necesitas saber qué hay en la escena sin leer todo el JSON
-requestAnimationFrame para export	Frame-pumping con track.requestFrame()	rAF no garantiza FPS constante → el video resultante tenía duración incorrecta
-Header vacío	Badges de resolución, FPS y duración	Contexto inmediato del formato sin tener que leer el JSON
-Sin easing spring	Añadido spring al objeto Easing	Útil para micro-interacciones UI tipo Material Design
-Export con nombre genérico	Nombre incluye resolución y timestamp	Para diferenciar exports de distintos formatos
-
-
-
-Send a Message
-
-
-
-
-
-
-
-
-
-
-Generated by AI. For reference only.
-Tech Blog
-Contact us
-Terms of Service
-and
-Privacy Policy
+</html>
