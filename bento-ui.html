@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe Graphics Engine Pro 🎨</title>
+    <title>Vibe Graphics Engine Pro 🎨 - Asset Loader</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
@@ -21,215 +21,90 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
+        // JSON de Ejemplo usando imágenes (SVGs externos de Twemoji como placeholder)
         const initialJSON = {
           "config": {
             "width": 1080,
             "height": 1920,
             "fps": 60,
-            "duration": 8.5,
-            "background": "#030712"
+            "duration": 6.0,
+            "background": "#ffffff"
           },
           "elements": [
             {
-              "id": "halo_ambiente",
+              "id": "mancha_fondo",
               "type": "circle",
               "x": 540,
               "y": 960,
-              "radius": 450,
-              "color": "#030712",
-              "blur": 200,
+              "radius": 400,
+              "color": "#cbfb45",
               "animations": [
-                { "prop": "color", "from": "#030712", "to": "#1e3a8a", "start": 3.0, "end": 4.5, "ease": "easeInOut" },
-                { "prop": "color", "from": "#1e3a8a", "to": "#022c22", "start": 6.0, "end": 7.5, "ease": "easeInOut" }
+                { "prop": "scale", "from": 0, "to": 1.2, "start": 0.2, "end": 1.5, "ease": "easeOutBounce" },
+                { "prop": "blur", "from": 0, "to": 80, "start": 2.0, "end": 3.0, "ease": "easeOut" }
               ]
             },
             {
-              "id": "chasis_base",
-              "type": "rect",
+              "id": "foto_telefono",
+              "type": "image",
+              "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4f1.svg",
               "x": 540,
               "y": 960,
-              "width": 500,
-              "height": 1000,
-              "color": "#0f172a",
+              "width": 400,
+              "height": 400,
               "anchor": "center",
-              "shadowBlur": 60,
-              "shadowColor": "#000000",
-              "animations": [
-                { "prop": "scale", "from": 0, "to": 1, "start": 0.2, "end": 1.5, "ease": "easeOutBounce" },
-                { "prop": "rotation", "from": -90, "to": 0, "start": 0.2, "end": 1.5, "ease": "easeOut" }
-              ]
-            },
-            {
-              "id": "modulo_camara",
-              "type": "rect",
-              "x": 390,
-              "y": 620,
-              "width": 140,
-              "height": 260,
-              "color": "#1e293b",
-              "anchor": "center",
-              "shadowBlur": 20,
-              "shadowColor": "#000000",
-              "animations": [
-                { "prop": "scale", "from": 0, "to": 1, "start": 0.8, "end": 1.8, "ease": "easeOutBounce" }
-              ]
-            },
-            {
-              "id": "lente_1",
-              "type": "circle",
-              "x": 390,
-              "y": 550,
-              "radius": 35,
-              "color": "#000000",
-              "shadowBlur": 0,
-              "animations": [
-                { "prop": "scale", "from": 0, "to": 1, "start": 1.5, "end": 2.2, "ease": "easeOutBounce" },
-                { "prop": "shadowBlur", "from": 0, "to": 20, "start": 3.5, "end": 4.0, "ease": "linear" },
-                { "prop": "shadowColor", "from": "#000000", "to": "#38bdf8", "start": 3.5, "end": 4.0, "ease": "linear" }
-              ]
-            },
-            {
-              "id": "lente_2",
-              "type": "circle",
-              "x": 390,
-              "y": 640,
-              "radius": 35,
-              "color": "#000000",
-              "shadowBlur": 0,
-              "animations": [
-                { "prop": "scale", "from": 0, "to": 1, "start": 1.7, "end": 2.4, "ease": "easeOutBounce" },
-                { "prop": "shadowBlur", "from": 0, "to": 20, "start": 3.6, "end": 4.1, "ease": "linear" },
-                { "prop": "shadowColor", "from": "#000000", "to": "#38bdf8", "start": 3.6, "end": 4.1, "ease": "linear" }
-              ]
-            },
-            {
-              "id": "lente_3",
-              "type": "circle",
-              "x": 390,
-              "y": 730,
-              "radius": 25,
-              "color": "#000000",
-              "shadowBlur": 0,
-              "animations": [
-                { "prop": "scale", "from": 0, "to": 1, "start": 1.9, "end": 2.6, "ease": "easeOutBounce" },
-                { "prop": "shadowBlur", "from": 0, "to": 20, "start": 3.7, "end": 4.2, "ease": "linear" },
-                { "prop": "shadowColor", "from": "#000000", "to": "#38bdf8", "start": 3.7, "end": 4.2, "ease": "linear" }
-              ]
-            },
-            {
-              "id": "cpu_chip",
-              "type": "rect",
-              "x": 620,
-              "y": 700,
-              "width": 160,
-              "height": 160,
-              "color": "#334155",
-              "anchor": "center",
-              "grayscale": 100,
-              "shadowBlur": 0,
-              "animations": [
-                { "prop": "x", "from": 1200, "to": 620, "start": 1.8, "end": 2.6, "ease": "easeOutBounce" },
-                { "prop": "rotation", "from": 360, "to": 0, "start": 1.8, "end": 2.6, "ease": "easeOut" },
-                { "prop": "grayscale", "from": 100, "to": 0, "start": 3.8, "end": 4.2, "ease": "linear" },
-                { "prop": "color", "from": "#334155", "to": "#3b82f6", "start": 3.8, "end": 4.2, "ease": "linear" },
-                { "prop": "shadowBlur", "from": 0, "to": 60, "start": 3.8, "end": 4.2, "ease": "easeOutBounce" },
-                { "prop": "shadowColor", "from": "#3b82f6", "to": "#3b82f6", "start": 3.8, "end": 4.2, "ease": "linear" }
-              ]
-            },
-            {
-              "id": "bateria_litio",
-              "type": "rect",
-              "x": 540,
-              "y": 1150,
-              "width": 360,
-              "height": 480,
-              "color": "#475569",
-              "anchor": "center",
-              "grayscale": 100,
-              "shadowBlur": 0,
-              "animations": [
-                { "prop": "x", "from": -200, "to": 540, "start": 2.0, "end": 2.8, "ease": "easeOutBounce" },
-                { "prop": "grayscale", "from": 100, "to": 0, "start": 4.0, "end": 4.4, "ease": "linear" },
-                { "prop": "color", "from": "#475569", "to": "#10b981", "start": 4.0, "end": 4.4, "ease": "linear" },
-                { "prop": "shadowBlur", "from": 0, "to": 50, "start": 4.0, "end": 4.4, "ease": "easeOutBounce" },
-                { "prop": "shadowColor", "from": "#10b981", "to": "#10b981", "start": 4.0, "end": 4.4, "ease": "linear" }
-              ]
-            },
-            {
-              "id": "laser_escaneo",
-              "type": "line",
-              "x1": 250,
-              "y1": 500,
-              "x2": 830,
-              "y2": 500,
-              "color": "#38bdf8",
-              "lineWidth": 8,
-              "opacity": 0,
               "shadowBlur": 40,
-              "shadowColor": "#38bdf8",
+              "shadowColor": "#000000",
               "animations": [
-                { "prop": "opacity", "from": 0, "to": 1, "start": 3.2, "end": 3.5, "ease": "linear" },
-                { "prop": "y1", "from": 500, "to": 1450, "start": 3.5, "end": 4.8, "ease": "easeInOut" },
-                { "prop": "y2", "from": 500, "to": 1450, "start": 3.5, "end": 4.8, "ease": "easeInOut" },
-                { "prop": "opacity", "from": 1, "to": 0, "start": 4.7, "end": 4.9, "ease": "linear" }
+                { "prop": "y", "from": -500, "to": 960, "start": 0.5, "end": 1.8, "ease": "easeOutBounce" },
+                { "prop": "rotation", "from": 180, "to": -15, "start": 0.5, "end": 1.8, "ease": "easeOutBounce" },
+                { "prop": "scale", "from": 1, "to": 1.2, "start": 2.5, "end": 3.5, "ease": "easeInOut" },
+                { "prop": "rotation", "from": -15, "to": 0, "start": 2.5, "end": 3.5, "ease": "easeInOut" }
               ]
             },
             {
-              "id": "pantalla_cristal",
-              "type": "rect",
-              "x": 540,
-              "y": 960,
-              "width": 460,
-              "height": 960,
-              "color": "#020617",
+              "id": "icono_herramienta",
+              "type": "image",
+              "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/2692.svg",
+              "x": 750,
+              "y": 800,
+              "width": 200,
+              "height": 200,
               "anchor": "center",
-              "opacity": 0,
-              "blur": 0,
               "animations": [
-                { "prop": "opacity", "from": 0, "to": 0.85, "start": 5.0, "end": 5.5, "ease": "easeOut" },
-                { "prop": "scale", "from": 1.2, "to": 1.0, "start": 5.0, "end": 5.5, "ease": "easeOutBounce" },
-                { "prop": "blur", "from": 0, "to": 10, "start": 5.0, "end": 5.5, "ease": "easeOut" },
-                { "prop": "color", "from": "#020617", "to": "#000000", "start": 5.5, "end": 6.0, "ease": "linear" }
+                { "prop": "scale", "from": 0, "to": 1.5, "start": 1.5, "end": 2.2, "ease": "easeOutBounce" },
+                { "prop": "rotation", "from": 0, "to": 45, "start": 1.5, "end": 2.2, "ease": "easeOut" },
+                { "prop": "y", "from": 800, "to": 750, "start": 2.5, "end": 3.5, "ease": "easeInOut" }
               ]
             },
             {
-              "id": "logo_marca",
+              "id": "txt_promo",
+              "type": "text",
+              "text": "REPARACIÓN PREMIUM",
+              "x": 540,
+              "y": 1400,
+              "fontSize": 70,
+              "color": "#0f172a",
+              "animations": [
+                { "prop": "opacity", "from": 0, "to": 1, "start": 3.0, "end": 3.5, "ease": "linear" },
+                { "prop": "y", "from": 1450, "to": 1400, "start": 3.0, "end": 3.5, "ease": "easeOutBounce" }
+              ]
+            },
+            {
+              "id": "txt_marca",
               "type": "text",
               "text": "techexchange",
               "x": 540,
-              "y": 880,
+              "y": 250,
               "fontSize": 90,
-              "color": "#ffffff",
-              "blur": 50,
-              "opacity": 0,
-              "shadowBlur": 0,
+              "color": "#0f172a",
               "animations": [
-                { "prop": "opacity", "from": 0, "to": 1, "start": 6.0, "end": 6.5, "ease": "linear" },
-                { "prop": "blur", "from": 50, "to": 0, "start": 6.0, "end": 6.5, "ease": "easeOut" },
-                { "prop": "scale", "from": 0.5, "to": 1.0, "start": 6.0, "end": 6.5, "ease": "easeOutBounce" },
-                { "prop": "color", "from": "#ffffff", "to": "#cbfb45", "start": 6.5, "end": 7.0, "ease": "easeInOut" },
-                { "prop": "shadowBlur", "from": 0, "to": 80, "start": 6.5, "end": 7.0, "ease": "easeOutBounce" },
-                { "prop": "shadowColor", "from": "#cbfb45", "to": "#cbfb45", "start": 6.5, "end": 7.0, "ease": "linear" }
-              ]
-            },
-            {
-              "id": "texto_servicio",
-              "type": "text",
-              "text": "HARDWARE RESTAURADO",
-              "x": 540,
-              "y": 1000,
-              "fontSize": 40,
-              "color": "#10b981",
-              "opacity": 0,
-              "animations": [
-                { "prop": "opacity", "from": 0, "to": 1, "start": 6.8, "end": 7.2, "ease": "linear" },
-                { "prop": "y", "from": 1050, "to": 1000, "start": 6.8, "end": 7.3, "ease": "easeOutBounce" }
+                { "prop": "opacity", "from": 0, "to": 1, "start": 3.5, "end": 4.0, "ease": "linear" },
+                { "prop": "blur", "from": 20, "to": 0, "start": 3.5, "end": 4.0, "ease": "easeOut" }
               ]
             }
           ]
         };
 
-        // Motores Matemáticos de Aceleración
         const Easing = {
             linear: t => t,
             easeOut: t => 1 - Math.pow(1 - t, 3),
@@ -263,19 +138,49 @@
             const [time, setTime] = useState(0);
             const [isPlaying, setIsPlaying] = useState(false);
             const [isExporting, setIsExporting] = useState(false);
+            const [imagesAssets, setImagesAssets] = useState({});
+            const [isLoadingAssets, setIsLoadingAssets] = useState(true);
+            
             const canvasRef = useRef(null);
             const animRef = useRef(null);
 
+            // PRELOADER DE IMÁGENES: Carga todas las fotos en RAM antes de dibujar
+            const loadImages = async (elements) => {
+                setIsLoadingAssets(true);
+                const loaded = {};
+                const imgElements = elements.filter(el => el.type === 'image' && el.src);
+                
+                const promises = imgElements.map(el => {
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        img.crossOrigin = "Anonymous"; // Permite exportar imágenes externas
+                        img.onload = () => { loaded[el.id] = img; resolve(); };
+                        img.onerror = () => { console.warn(`No se pudo cargar la imagen: ${el.src}`); resolve(); };
+                        img.src = el.src;
+                    });
+                });
+
+                await Promise.all(promises);
+                setImagesAssets(loaded);
+                setIsLoadingAssets(false);
+            };
+
             const handleSync = () => {
                 try {
-                    setData(JSON.parse(jsonText));
+                    const parsedData = JSON.parse(jsonText);
+                    setData(parsedData);
                     setTime(0);
+                    loadImages(parsedData.elements);
                 } catch (e) {
-                    alert("Error en el JSON");
+                    alert("Error de Sintaxis en el JSON");
                 }
             };
 
-            // SOLUCIÓN 1: getAnimatedValue ahora recibe el currentT (tiempo exacto del exportador)
+            // Iniciar carga en el primer render
+            useEffect(() => {
+                loadImages(data.elements);
+            }, []);
+
             const getAnimatedValue = (element, propName, defaultValue, currentT) => {
                 const anims = element.animations?.filter(a => a.prop === propName);
                 if (!anims || anims.length === 0) return defaultValue;
@@ -299,7 +204,6 @@
                 return currentValue;
             };
 
-            // SOLUCIÓN 2: renderCanvas usa el currentT para dibujar
             const renderCanvas = (currentT) => {
                 const canvas = canvasRef.current;
                 if (!canvas) return;
@@ -320,7 +224,9 @@
                     const blur = getAnimatedValue(el, 'blur', el.blur || 0, currentT);
                     const grayscale = getAnimatedValue(el, 'grayscale', el.grayscale || 0, currentT);
                     const shadowBlur = getAnimatedValue(el, 'shadowBlur', el.shadowBlur || 0, currentT);
-                    const color = getAnimatedValue(el, 'color', el.color || "#ffffff", currentT);
+                    
+                    // No usamos color por defecto en imágenes para evitar errores
+                    const color = el.type !== 'image' ? getAnimatedValue(el, 'color', el.color || "#ffffff", currentT) : null;
 
                     ctx.globalAlpha = Math.max(0, Math.min(1, opacity));
                     
@@ -331,10 +237,26 @@
 
                     if (shadowBlur > 0) {
                         ctx.shadowBlur = shadowBlur;
-                        ctx.shadowColor = getAnimatedValue(el, 'shadowColor', el.shadowColor || color, currentT);
+                        ctx.shadowColor = getAnimatedValue(el, 'shadowColor', el.shadowColor || color || "#000000", currentT);
                     }
                     
-                    if (el.type === 'rect') {
+                    // -- SOPORTE PARA IMÁGENES PNG / SVG --
+                    if (el.type === 'image') {
+                        const img = imagesAssets[el.id];
+                        if (img) {
+                            const w = getAnimatedValue(el, 'width', el.width || img.width, currentT);
+                            const h = getAnimatedValue(el, 'height', el.height || img.height, currentT);
+                            ctx.translate(x, y);
+                            ctx.rotate(rot * Math.PI / 180);
+                            ctx.scale(scale, scale);
+                            if (el.anchor === 'center') {
+                                ctx.drawImage(img, -w/2, -h/2, w, h);
+                            } else {
+                                ctx.drawImage(img, 0, 0, w, h);
+                            }
+                        }
+                    }
+                    else if (el.type === 'rect') {
                         const w = getAnimatedValue(el, 'width', el.width, currentT);
                         const h = getAnimatedValue(el, 'height', el.height, currentT);
                         ctx.translate(x, y);
@@ -356,17 +278,6 @@
                         ctx.fillStyle = color;
                         ctx.fill();
                     }
-                    else if (el.type === 'line') {
-                        const x2 = getAnimatedValue(el, 'x2', el.x2, currentT);
-                        const y2 = getAnimatedValue(el, 'y2', el.y2, currentT);
-                        
-                        ctx.beginPath();
-                        ctx.moveTo(x, y);
-                        ctx.lineTo(x2, y2);
-                        ctx.strokeStyle = color;
-                        ctx.lineWidth = el.lineWidth || 5;
-                        ctx.stroke();
-                    }
                     else if (el.type === 'text') {
                         ctx.translate(x, y);
                         ctx.scale(scale, scale);
@@ -382,7 +293,7 @@
             };
 
             useEffect(() => {
-                if (isPlaying && !isExporting) {
+                if (isPlaying && !isExporting && !isLoadingAssets) {
                     let lastTime = performance.now();
                     const loop = (now) => {
                         const dt = (now - lastTime) / 1000;
@@ -398,18 +309,17 @@
                     cancelAnimationFrame(animRef.current);
                 }
                 return () => cancelAnimationFrame(animRef.current);
-            }, [isPlaying, data.config.duration, isExporting]);
+            }, [isPlaying, data.config.duration, isExporting, isLoadingAssets]);
 
             useEffect(() => {
-                if (!isExporting) {
+                if (!isExporting && !isLoadingAssets) {
                     renderCanvas(time);
                 }
-            }, [time, data, isExporting]);
+            }, [time, data, isExporting, isLoadingAssets, imagesAssets]);
 
-            // SOLUCIÓN 3: Sincronizar el reloj real con el MediaRecorder
             const handleExport = async () => {
                 const canvas = canvasRef.current;
-                if (!canvas) return;
+                if (!canvas || isLoadingAssets) return;
 
                 setIsPlaying(false);
                 setIsExporting(true);
@@ -425,7 +335,7 @@
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `techexchange_render_${Date.now()}.webm`;
+                    a.download = `techexchange_media_${Date.now()}.webm`;
                     a.click();
                     setIsExporting(false);
                     setTime(0);
@@ -446,11 +356,8 @@
                         return;
                     }
                     
-                    // Actualizamos la UI visualmente
                     setTime(elapsedTime);
-                    // Dibujamos el frame EXACTO sincronizado
                     renderCanvas(elapsedTime);
-                    
                     exportFrameId = requestAnimationFrame(exportLoop);
                 };
 
@@ -461,9 +368,9 @@
                 <div className="flex h-screen overflow-hidden">
                     <div className="w-1/3 bg-slate-900 border-r border-slate-800 flex flex-col z-10 shadow-2xl">
                         <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
-                            <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-bolt mr-2"></i>VIBE GRAPHICS PRO</h2>
-                            <button onClick={handleSync} className="bg-slate-800 border border-slate-700 hover:bg-slate-700 px-4 py-1.5 text-xs font-bold rounded transition-colors">
-                                <i className="fas fa-rotate mr-2"></i>Sincronizar
+                            <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-image mr-2"></i>ASSET ENGINE PRO</h2>
+                            <button onClick={handleSync} disabled={isLoadingAssets} className="bg-slate-800 border border-slate-700 hover:bg-slate-700 px-4 py-1.5 text-xs font-bold rounded transition-colors disabled:opacity-50">
+                                {isLoadingAssets ? <i className="fas fa-spinner fa-spin"></i> : <><i className="fas fa-rotate mr-2"></i>Sincronizar</>}
                             </button>
                         </div>
                         <textarea 
@@ -478,8 +385,8 @@
                         {isExporting && (
                             <div className="absolute inset-0 bg-black/85 z-50 flex items-center justify-center flex-col backdrop-blur-sm">
                                 <i className="fas fa-microchip animate-spin text-5xl text-amber-500 mb-6"></i>
-                                <h2 className="text-2xl font-bold tracking-tight">Renderizando...</h2>
-                                <p className="text-slate-400 mt-2 font-mono text-sm">Grabando directamente del Canvas a {data.config.fps} FPS puros</p>
+                                <h2 className="text-2xl font-bold tracking-tight">Renderizando Asset...</h2>
+                                <p className="text-slate-400 mt-2 font-mono text-sm">Grabando texturas PNG/SVG a {data.config.fps} FPS puros</p>
                             </div>
                         )}
                         
@@ -497,7 +404,7 @@
                         <div className="h-20 bg-slate-900 border-t border-slate-800 px-8 flex items-center justify-between">
                             <div className="flex items-center space-x-4">
                                 <button onClick={() => setTime(0)} className="text-slate-400 hover:text-white text-xl transition-colors"><i className="fas fa-backward-step"></i></button>
-                                <button onClick={() => setIsPlaying(!isPlaying)} className="w-12 h-12 bg-amber-500 hover:bg-amber-400 rounded-full text-black flex items-center justify-center text-xl shadow-lg transition-transform hover:scale-105">
+                                <button onClick={() => setIsPlaying(!isPlaying)} disabled={isLoadingAssets} className="w-12 h-12 bg-amber-500 hover:bg-amber-400 rounded-full text-black flex items-center justify-center text-xl shadow-lg transition-transform hover:scale-105 disabled:opacity-50">
                                     <i className={`fas ${isPlaying ? 'fa-pause' : 'fa-play ml-1'}`}></i>
                                 </button>
                                 <span className="font-mono text-amber-500 text-sm font-bold bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
@@ -505,9 +412,9 @@
                                 </span>
                             </div>
 
-                            <button onClick={handleExport} className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold px-6 py-3 rounded-lg shadow-lg shadow-emerald-900/40 flex items-center space-x-2 transition-all">
+                            <button onClick={handleExport} disabled={isLoadingAssets} className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold px-6 py-3 rounded-lg shadow-lg shadow-emerald-900/40 flex items-center space-x-2 transition-all disabled:opacity-50">
                                 <i className="fas fa-download"></i>
-                                <span>Exportar Video Directo</span>
+                                <span>Exportar Video (Anti-Glitch)</span>
                             </button>
                         </div>
                     </div>
