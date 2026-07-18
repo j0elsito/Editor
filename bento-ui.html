@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe Graphics Engine Pro 🎨 - Asset Loader</title>
+    <title>Vibe Graphics Engine Pro 🎨 - UI Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
@@ -21,85 +21,121 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // JSON de Ejemplo usando imágenes (SVGs externos de Twemoji como placeholder)
+        // JSON de Ejemplo: Un anuncio de TechExchange con Botones Profesionales y UI Cards
         const initialJSON = {
           "config": {
             "width": 1080,
             "height": 1920,
             "fps": 60,
-            "duration": 6.0,
-            "background": "#ffffff"
+            "duration": 6.5,
+            "background": "#f8fafc"
           },
           "elements": [
             {
-              "id": "mancha_fondo",
-              "type": "circle",
+              "id": "ui_card_sombra",
+              "type": "rect",
               "x": 540,
               "y": 960,
-              "radius": 400,
-              "color": "#cbfb45",
+              "width": 850,
+              "height": 1200,
+              "borderRadius": 80,
+              "color": "#000000",
+              "anchor": "center",
+              "blur": 80,
+              "opacity": 0,
               "animations": [
-                { "prop": "scale", "from": 0, "to": 1.2, "start": 0.2, "end": 1.5, "ease": "easeOutBounce" },
-                { "prop": "blur", "from": 0, "to": 80, "start": 2.0, "end": 3.0, "ease": "easeOut" }
+                { "prop": "y", "from": 2500, "to": 980, "start": 0.2, "end": 1.5, "ease": "easeOutBounce" },
+                { "prop": "opacity", "from": 0, "to": 0.15, "start": 0.5, "end": 1.5, "ease": "linear" }
               ]
             },
             {
-              "id": "foto_telefono",
-              "type": "image",
-              "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4f1.svg",
+              "id": "ui_card_blanca",
+              "type": "rect",
               "x": 540,
               "y": 960,
-              "width": 400,
-              "height": 400,
+              "width": 850,
+              "height": 1200,
+              "borderRadius": 80,
+              "color": "#ffffff",
               "anchor": "center",
-              "shadowBlur": 40,
-              "shadowColor": "#000000",
               "animations": [
-                { "prop": "y", "from": -500, "to": 960, "start": 0.5, "end": 1.8, "ease": "easeOutBounce" },
-                { "prop": "rotation", "from": 180, "to": -15, "start": 0.5, "end": 1.8, "ease": "easeOutBounce" },
-                { "prop": "scale", "from": 1, "to": 1.2, "start": 2.5, "end": 3.5, "ease": "easeInOut" },
-                { "prop": "rotation", "from": -15, "to": 0, "start": 2.5, "end": 3.5, "ease": "easeInOut" }
+                { "prop": "y", "from": 2500, "to": 960, "start": 0.2, "end": 1.5, "ease": "easeOutBounce" }
               ]
             },
             {
-              "id": "icono_herramienta",
+              "id": "icono_logo",
               "type": "image",
-              "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/2692.svg",
-              "x": 750,
-              "y": 800,
-              "width": 200,
-              "height": 200,
+              "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f527.svg",
+              "x": 540,
+              "y": 650,
+              "width": 250,
+              "height": 250,
               "anchor": "center",
               "animations": [
-                { "prop": "scale", "from": 0, "to": 1.5, "start": 1.5, "end": 2.2, "ease": "easeOutBounce" },
-                { "prop": "rotation", "from": 0, "to": 45, "start": 1.5, "end": 2.2, "ease": "easeOut" },
-                { "prop": "y", "from": 800, "to": 750, "start": 2.5, "end": 3.5, "ease": "easeInOut" }
+                { "prop": "scale", "from": 0, "to": 1, "start": 1.0, "end": 2.0, "ease": "easeOutBounce" },
+                { "prop": "rotation", "from": -90, "to": 0, "start": 1.0, "end": 2.0, "ease": "easeOut" }
               ]
             },
             {
-              "id": "txt_promo",
+              "id": "texto_titulo",
               "type": "text",
-              "text": "REPARACIÓN PREMIUM",
+              "text": "TechExchange",
               "x": 540,
-              "y": 1400,
-              "fontSize": 70,
-              "color": "#0f172a",
-              "animations": [
-                { "prop": "opacity", "from": 0, "to": 1, "start": 3.0, "end": 3.5, "ease": "linear" },
-                { "prop": "y", "from": 1450, "to": 1400, "start": 3.0, "end": 3.5, "ease": "easeOutBounce" }
-              ]
-            },
-            {
-              "id": "txt_marca",
-              "type": "text",
-              "text": "techexchange",
-              "x": 540,
-              "y": 250,
+              "y": 950,
               "fontSize": 90,
+              "fontFamily": "system-ui, -apple-system, sans-serif",
               "color": "#0f172a",
+              "opacity": 0,
               "animations": [
-                { "prop": "opacity", "from": 0, "to": 1, "start": 3.5, "end": 4.0, "ease": "linear" },
-                { "prop": "blur", "from": 20, "to": 0, "start": 3.5, "end": 4.0, "ease": "easeOut" }
+                { "prop": "opacity", "from": 0, "to": 1, "start": 1.8, "end": 2.2, "ease": "linear" },
+                { "prop": "y", "from": 1000, "to": 950, "start": 1.8, "end": 2.5, "ease": "easeOut" }
+              ]
+            },
+            {
+              "id": "texto_descripcion",
+              "type": "text",
+              "text": "Reparación exprés en 45 min",
+              "x": 540,
+              "y": 1050,
+              "fontSize": 45,
+              "fontFamily": "system-ui, -apple-system, sans-serif",
+              "color": "#64748b",
+              "opacity": 0,
+              "animations": [
+                { "prop": "opacity", "from": 0, "to": 1, "start": 2.0, "end": 2.4, "ease": "linear" },
+                { "prop": "y", "from": 1100, "to": 1050, "start": 2.0, "end": 2.7, "ease": "easeOut" }
+              ]
+            },
+            {
+              "id": "btn_fondo_whatsapp",
+              "type": "rect",
+              "x": 540,
+              "y": 1300,
+              "width": 650,
+              "height": 160,
+              "borderRadius": 80,
+              "color": "#10b981",
+              "anchor": "center",
+              "shadowBlur": 0,
+              "shadowColor": "#10b981",
+              "scale": 0,
+              "animations": [
+                { "prop": "scale", "from": 0, "to": 1, "start": 2.8, "end": 3.6, "ease": "easeOutBounce" },
+                { "prop": "shadowBlur", "from": 0, "to": 40, "start": 3.6, "end": 4.5, "ease": "easeOutBounce" }
+              ]
+            },
+            {
+              "id": "btn_texto",
+              "type": "text",
+              "text": "Agendar Cita",
+              "x": 540,
+              "y": 1300,
+              "fontSize": 55,
+              "fontFamily": "system-ui, -apple-system, sans-serif",
+              "color": "#ffffff",
+              "scale": 0,
+              "animations": [
+                { "prop": "scale", "from": 0, "to": 1, "start": 2.8, "end": 3.6, "ease": "easeOutBounce" }
               ]
             }
           ]
@@ -144,7 +180,6 @@
             const canvasRef = useRef(null);
             const animRef = useRef(null);
 
-            // PRELOADER DE IMÁGENES: Carga todas las fotos en RAM antes de dibujar
             const loadImages = async (elements) => {
                 setIsLoadingAssets(true);
                 const loaded = {};
@@ -153,9 +188,9 @@
                 const promises = imgElements.map(el => {
                     return new Promise((resolve) => {
                         const img = new Image();
-                        img.crossOrigin = "Anonymous"; // Permite exportar imágenes externas
+                        img.crossOrigin = "Anonymous";
                         img.onload = () => { loaded[el.id] = img; resolve(); };
-                        img.onerror = () => { console.warn(`No se pudo cargar la imagen: ${el.src}`); resolve(); };
+                        img.onerror = () => { console.warn(`Error imagen: ${el.src}`); resolve(); };
                         img.src = el.src;
                     });
                 });
@@ -172,11 +207,10 @@
                     setTime(0);
                     loadImages(parsedData.elements);
                 } catch (e) {
-                    alert("Error de Sintaxis en el JSON");
+                    alert("Error en el JSON");
                 }
             };
 
-            // Iniciar carga en el primer render
             useEffect(() => {
                 loadImages(data.elements);
             }, []);
@@ -225,7 +259,6 @@
                     const grayscale = getAnimatedValue(el, 'grayscale', el.grayscale || 0, currentT);
                     const shadowBlur = getAnimatedValue(el, 'shadowBlur', el.shadowBlur || 0, currentT);
                     
-                    // No usamos color por defecto en imágenes para evitar errores
                     const color = el.type !== 'image' ? getAnimatedValue(el, 'color', el.color || "#ffffff", currentT) : null;
 
                     ctx.globalAlpha = Math.max(0, Math.min(1, opacity));
@@ -240,7 +273,6 @@
                         ctx.shadowColor = getAnimatedValue(el, 'shadowColor', el.shadowColor || color || "#000000", currentT);
                     }
                     
-                    // -- SOPORTE PARA IMÁGENES PNG / SVG --
                     if (el.type === 'image') {
                         const img = imagesAssets[el.id];
                         if (img) {
@@ -259,15 +291,22 @@
                     else if (el.type === 'rect') {
                         const w = getAnimatedValue(el, 'width', el.width, currentT);
                         const h = getAnimatedValue(el, 'height', el.height, currentT);
+                        const radius = getAnimatedValue(el, 'borderRadius', el.borderRadius || 0, currentT); // NUEVO: BORDES REDONDEADOS
+                        
                         ctx.translate(x, y);
                         ctx.rotate(rot * Math.PI / 180);
                         ctx.scale(scale, scale);
                         ctx.fillStyle = color;
+                        
+                        ctx.beginPath();
                         if (el.anchor === 'center') {
-                            ctx.fillRect(-w/2, -h/2, w, h);
+                            if (radius > 0) ctx.roundRect(-w/2, -h/2, w, h, radius);
+                            else ctx.rect(-w/2, -h/2, w, h);
                         } else {
-                            ctx.fillRect(0, 0, w, h);
+                            if (radius > 0) ctx.roundRect(0, 0, w, h, radius);
+                            else ctx.rect(0, 0, w, h);
                         }
+                        ctx.fill();
                     } 
                     else if (el.type === 'circle') {
                         const r = getAnimatedValue(el, 'radius', el.radius, currentT);
@@ -282,8 +321,11 @@
                         ctx.translate(x, y);
                         ctx.scale(scale, scale);
                         ctx.fillStyle = color;
-                        ctx.font = `bold ${el.fontSize}px sans-serif`;
-                        ctx.textAlign = "center";
+                        // NUEVO: SOPORTE DE TIPOGRAFÍAS PARA TEXTOS Y BOTONES
+                        const font = el.fontFamily || "sans-serif";
+                        const weight = el.fontWeight || "bold";
+                        ctx.font = `${weight} ${el.fontSize}px ${font}`;
+                        ctx.textAlign = el.textAlign || "center";
                         ctx.textBaseline = "middle";
                         ctx.fillText(el.text, 0, 0);
                     }
@@ -335,7 +377,7 @@
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `techexchange_media_${Date.now()}.webm`;
+                    a.download = `techexchange_ui_ad_${Date.now()}.webm`;
                     a.click();
                     setIsExporting(false);
                     setTime(0);
@@ -349,13 +391,11 @@
 
                 const exportLoop = (now) => {
                     const elapsedTime = (now - startTime) / 1000;
-
                     if (elapsedTime > data.config.duration) {
                         mediaRecorder.stop();
                         cancelAnimationFrame(exportFrameId);
                         return;
                     }
-                    
                     setTime(elapsedTime);
                     renderCanvas(elapsedTime);
                     exportFrameId = requestAnimationFrame(exportLoop);
@@ -368,7 +408,7 @@
                 <div className="flex h-screen overflow-hidden">
                     <div className="w-1/3 bg-slate-900 border-r border-slate-800 flex flex-col z-10 shadow-2xl">
                         <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
-                            <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-image mr-2"></i>ASSET ENGINE PRO</h2>
+                            <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-layer-group mr-2"></i>UI ENGINE PRO</h2>
                             <button onClick={handleSync} disabled={isLoadingAssets} className="bg-slate-800 border border-slate-700 hover:bg-slate-700 px-4 py-1.5 text-xs font-bold rounded transition-colors disabled:opacity-50">
                                 {isLoadingAssets ? <i className="fas fa-spinner fa-spin"></i> : <><i className="fas fa-rotate mr-2"></i>Sincronizar</>}
                             </button>
@@ -386,7 +426,7 @@
                             <div className="absolute inset-0 bg-black/85 z-50 flex items-center justify-center flex-col backdrop-blur-sm">
                                 <i className="fas fa-microchip animate-spin text-5xl text-amber-500 mb-6"></i>
                                 <h2 className="text-2xl font-bold tracking-tight">Renderizando Asset...</h2>
-                                <p className="text-slate-400 mt-2 font-mono text-sm">Grabando texturas PNG/SVG a {data.config.fps} FPS puros</p>
+                                <p className="text-slate-400 mt-2 font-mono text-sm">Grabando UI Components a {data.config.fps} FPS puros</p>
                             </div>
                         )}
                         
