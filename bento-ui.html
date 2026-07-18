@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vibe Studio Pro | Timeline & Drag Edition</title>
+    <title>Vibe Studio Pro | Hybrid Editor Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
@@ -15,10 +15,8 @@
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
         ::-webkit-scrollbar-track { background: #18181b; }
         
-        /* Tema CapCut / Premiere */
         .panel { background-color: #1e1e1e; border: 1px solid #2d2d2d; }
         .track-bg { background-color: #262626; }
-        .track-item { background-color: #3f3f46; border: 1px solid #52525b; }
         .playhead-line { position: absolute; top: 0; bottom: 0; width: 2px; background-color: #3b82f6; z-index: 50; pointer-events: none; }
         .playhead-head { position: absolute; top: 0; transform: translateX(-50%); width: 10px; height: 12px; background-color: #3b82f6; clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%); cursor: ew-resize; z-index: 51;}
         
@@ -52,27 +50,19 @@
         };
 
         const Easing = {
-            linear: t => t,
-            easeOut: t => 1 - Math.pow(1 - t, 3),
-            easeInOut: t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
-            easeOutBounce: t => {
-                const n1 = 7.5625, d1 = 2.75;
-                if (t < 1 / d1) return n1 * t * t;
-                if (t < 2 / d1) return n1 * (t -= 1.5 / d1) * t + 0.75;
-                if (t < 2.5 / d1) return n1 * (t -= 2.25 / d1) * t + 0.9375;
-                return n1 * (t -= 2.625 / d1) * t + 0.984375;
-            }
+            linear: t => t, easeOut: t => 1 - Math.pow(1 - t, 3), easeInOut: t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+            easeOutBounce: t => { const n1 = 7.5625, d1 = 2.75; if (t < 1 / d1) return n1 * t * t; if (t < 2 / d1) return n1 * (t -= 1.5 / d1) * t + 0.75; if (t < 2.5 / d1) return n1 * (t -= 2.25 / d1) * t + 0.9375; return n1 * (t -= 2.625 / d1) * t + 0.984375; }
         };
 
         function App() {
             const [data, setData] = useState(initialJSON);
+            const [jsonText, setJsonText] = useState(JSON.stringify(initialJSON, null, 2));
             const [time, setTime] = useState(0);
             const [isPlaying, setIsPlaying] = useState(false);
             const [isExporting, setIsExporting] = useState(false);
             const [selectedId, setSelectedId] = useState(null);
             const [imagesAssets, setImagesAssets] = useState({});
             
-            // Estados para DRAG & DROP en Canvas
             const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
             const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
@@ -80,7 +70,20 @@
             const animRef = useRef(null);
             const timelineRef = useRef(null);
 
-            // --- CARGA DE IMÁGENES ---
+            // Sincronizador Maestro: Actualiza el estado visual y el texto JSON simultáneamente
+            const updateDataState = (newData) => {
+                setData(newData);
+                setJsonText(JSON.stringify(newData, null, 2));
+            };
+
+            const handleJsonChange = (e) => {
+                setJsonText(e.target.value);
+                try { 
+                    const parsed = JSON.parse(e.target.value); 
+                    setData(parsed); 
+                } catch(err) { /* Ignorar errores de tipeo temporalmente */ }
+            };
+
             const loadImages = async (elements) => {
                 const loaded = { ...imagesAssets };
                 const promises = elements.filter(el => el.type === 'image' && el.src).map(el => {
@@ -98,18 +101,16 @@
             };
             useEffect(() => { loadImages(data.elements); }, [data]);
 
-            // --- MOTOR DE ANIMACIÓN ---
             const getAnimatedValue = (element, propName, defaultValue, currentT) => {
                 const anims = element.animations?.filter(a => a.prop === propName);
                 if (!anims || anims.length === 0) return defaultValue;
-
                 let currentValue = anims[0].from;
                 for (const anim of anims) {
                     if (currentT < anim.start) continue;
                     if (currentT >= anim.end) { currentValue = anim.to; continue; }
                     const progress = (currentT - anim.start) / (anim.end - anim.start);
                     const easeFn = Easing[anim.ease || 'linear'] || Easing.linear;
-                    if (propName.toLowerCase().includes('color')) return defaultValue; // Simplificado para color
+                    if (propName.toLowerCase().includes('color')) return defaultValue; 
                     currentValue = anim.from + (anim.to - anim.from) * easeFn(progress);
                 }
                 return currentValue;
@@ -142,10 +143,8 @@
 
                     if (el.type === 'image' && imagesAssets[el.id]) {
                         const img = imagesAssets[el.id];
-                        const w = el.width || img.width;
-                        const h = el.height || img.height;
-                        if (el.anchor === 'center') ctx.drawImage(img, -w/2, -h/2, w, h);
-                        else ctx.drawImage(img, 0, 0, w, h);
+                        const w = el.width || img.width; const h = el.height || img.height;
+                        if (el.anchor === 'center') ctx.drawImage(img, -w/2, -h/2, w, h); else ctx.drawImage(img, 0, 0, w, h);
                     }
                     else if (el.type === 'rect') {
                         const w = el.width || 100; const h = el.height || 100;
@@ -166,29 +165,22 @@
                         ctx.fillText(el.text, 0, 0);
                     }
 
-                    // CAJA DE SELECCIÓN ESTILO PREMIERE
                     if (el.id === selectedId && !isExporting) {
                         ctx.strokeStyle = "#3b82f6";
                         ctx.lineWidth = 4 / scale; 
                         const w = el.width || 200; const h = el.height || 100;
                         const offset = el.anchor === 'center' || el.type === 'text' ? {x: -w/2, y: -h/2} : {x: 0, y: 0};
-                        
                         ctx.strokeRect(offset.x - 5, offset.y - 5, w + 10, h + 10);
-                        
-                        // Puntos de control (esquinas)
                         ctx.fillStyle = "#ffffff";
                         const dotSize = 12 / scale;
                         const drawDot = (dx, dy) => ctx.fillRect(dx - dotSize/2, dy - dotSize/2, dotSize, dotSize);
-                        drawDot(offset.x - 5, offset.y - 5);
-                        drawDot(offset.x + w + 5, offset.y - 5);
-                        drawDot(offset.x - 5, offset.y + h + 5);
-                        drawDot(offset.x + w + 5, offset.y + h + 5);
+                        drawDot(offset.x - 5, offset.y - 5); drawDot(offset.x + w + 5, offset.y - 5);
+                        drawDot(offset.x - 5, offset.y + h + 5); drawDot(offset.x + w + 5, offset.y + h + 5);
                     }
                     ctx.restore();
                 });
             };
 
-            // --- BUCLE DE REPRODUCCIÓN ---
             useEffect(() => {
                 if (isPlaying && !isExporting) {
                     let lastTime = performance.now();
@@ -203,32 +195,23 @@
                         animRef.current = requestAnimationFrame(loop);
                     };
                     animRef.current = requestAnimationFrame(loop);
-                } else {
-                    cancelAnimationFrame(animRef.current);
-                }
+                } else { cancelAnimationFrame(animRef.current); }
                 return () => cancelAnimationFrame(animRef.current);
             }, [isPlaying, data.config.duration, isExporting]);
 
             useEffect(() => { if (!isExporting) renderCanvas(time); }, [time, data, isExporting, selectedId, imagesAssets]);
 
-
-            // --- DRAG AND DROP EN CANVAS ---
             const getCanvasMousePos = (e) => {
                 const canvas = canvasRef.current;
                 const rect = canvas.getBoundingClientRect();
                 const scaleX = canvas.width / rect.width;
                 const scaleY = canvas.height / rect.height;
-                return {
-                    x: (e.clientX || e.touches?.[0].clientX) - rect.left,
-                    y: (e.clientY || e.touches?.[0].clientY) - rect.top,
-                    scaleX, scaleY
-                };
+                return { x: (e.clientX || e.touches?.[0].clientX) - rect.left, y: (e.clientY || e.touches?.[0].clientY) - rect.top, scaleX, scaleY };
             };
 
             const handleCanvasMouseDown = (e) => {
                 const { x: rawX, y: rawY, scaleX, scaleY } = getCanvasMousePos(e);
-                const clickX = rawX * scaleX;
-                const clickY = rawY * scaleY;
+                const clickX = rawX * scaleX; const clickY = rawY * scaleY;
                 
                 let hitId = null;
                 for (let i = data.elements.length - 1; i >= 0; i--) {
@@ -236,17 +219,12 @@
                     const elX = getAnimatedValue(el, 'x', el.x || 0, time);
                     const elY = getAnimatedValue(el, 'y', el.y || 0, time);
                     const w = el.width || 300; const h = el.height || 100;
-                    
                     let minX = el.anchor === 'center' || el.type === 'text' ? elX - w/2 : elX;
                     let minY = el.anchor === 'center' || el.type === 'text' ? elY - h/2 : elY;
-
                     if (clickX >= minX && clickX <= minX + w && clickY >= minY && clickY <= minY + h) {
-                        hitId = el.id;
-                        setDragOffset({ x: clickX - (el.x || 0), y: clickY - (el.y || 0) });
-                        break;
+                        hitId = el.id; setDragOffset({ x: clickX - (el.x || 0), y: clickY - (el.y || 0) }); break;
                     }
                 }
-                
                 setSelectedId(hitId);
                 if (hitId) setIsDraggingCanvas(true);
             };
@@ -254,40 +232,27 @@
             const handleCanvasMouseMove = (e) => {
                 if (!isDraggingCanvas || !selectedId) return;
                 const { x: rawX, y: rawY, scaleX, scaleY } = getCanvasMousePos(e);
-                const currentMouseX = rawX * scaleX;
-                const currentMouseY = rawY * scaleY;
-
-                const newX = currentMouseX - dragOffset.x;
-                const newY = currentMouseY - dragOffset.y;
-
-                // Actualiza la posición BASE del elemento
-                const newElements = data.elements.map(el => 
-                    el.id === selectedId ? { ...el, x: Math.round(newX), y: Math.round(newY) } : el
-                );
-                setData({ ...data, elements: newElements });
+                const newX = (rawX * scaleX) - dragOffset.x;
+                const newY = (rawY * scaleY) - dragOffset.y;
+                const newElements = data.elements.map(el => el.id === selectedId ? { ...el, x: Math.round(newX), y: Math.round(newY) } : el);
+                updateDataState({ ...data, elements: newElements });
             };
 
             const handleCanvasMouseUp = () => setIsDraggingCanvas(false);
 
-            // --- SCRUBBING EN TIMELINE (Mover el tiempo) ---
             const handleTimelineClick = (e) => {
                 if (!timelineRef.current) return;
                 const rect = timelineRef.current.getBoundingClientRect();
                 const clickX = e.clientX - rect.left;
-                const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-                setTime(percentage * data.config.duration);
+                setTime(Math.max(0, Math.min(1, clickX / rect.width)) * data.config.duration);
             };
 
-            const handleTimelineDrag = (e) => {
-                if (e.buttons !== 1) return; // Solo si el click izq está presionado
-                handleTimelineClick(e);
-            };
+            const handleTimelineDrag = (e) => { if (e.buttons === 1) handleTimelineClick(e); };
 
-            // --- FUNCIONES DE EDICIÓN ---
             const updateElementProperty = (prop, value) => {
                 if(!selectedId) return;
                 const newElements = data.elements.map(el => el.id === selectedId ? { ...el, [prop]: value } : el);
-                setData({ ...data, elements: newElements });
+                updateDataState({ ...data, elements: newElements });
             };
 
             const handleAddElement = (type) => {
@@ -295,7 +260,7 @@
                 const newElement = { id: newId, type: type, x: 540, y: 960, anchor: "center", animations: [] };
                 if(type === 'rect') { newElement.width = 250; newElement.height = 250; newElement.color = "#cbfb45"; }
                 if(type === 'text') { newElement.text = "NUEVO TEXTO"; newElement.fontSize = 60; newElement.color = "#ffffff"; }
-                setData({ ...data, elements: [...data.elements, newElement] });
+                updateDataState({ ...data, elements: [...data.elements, newElement] });
                 setSelectedId(newId);
             };
 
@@ -307,14 +272,7 @@
                     if (el.id === selectedId) return { ...el, type: 'image', src: objectUrl, width: 300, height: 300 };
                     return el;
                 });
-                setData({ ...data, elements: newElements });
-            };
-
-            const handleAddKeyframe = () => {
-                if(!selectedId) return;
-                const el = data.elements.find(e => e.id === selectedId);
-                const newAnims = [...(el.animations || []), { prop: "x", from: el.x, to: el.x + 200, start: time, end: Math.min(time + 1, data.config.duration), ease: "easeOut" }];
-                updateElementProperty('animations', newAnims);
+                updateDataState({ ...data, elements: newElements });
             };
 
             const selectedElement = data.elements.find(el => el.id === selectedId);
@@ -322,13 +280,26 @@
             return (
                 <div className="flex flex-col h-screen w-full bg-[#121212]">
                     
-                    {/* ZONA SUPERIOR: MONITOR Y PROPIEDADES */}
-                    <div className="flex flex-1 h-[60%] border-b border-[#2d2d2d]">
+                    {/* ZONA SUPERIOR: 3 COLUMNAS (Código | Monitor | Inspector) */}
+                    <div className="flex flex-1 h-[60%] border-b border-[#2d2d2d] flex-col md:flex-row">
                         
-                        {/* CANVAS PREVIEW (Estilo Monitor Premiere) */}
-                        <div className="flex-1 flex flex-col panel">
+                        {/* 1. PANEL DE CÓDIGO JSON (RECUPERADO) */}
+                        <div className="w-full md:w-[280px] lg:w-[320px] panel flex flex-col border-r border-[#2d2d2d]">
                             <div className="h-10 bg-[#1a1a1a] border-b border-[#2d2d2d] flex items-center px-4">
-                                <span className="text-xs font-bold text-gray-400">Monitor de Programa</span>
+                                <span className="text-xs font-bold text-gray-400"><i className="fas fa-code mr-2"></i>Source Code</span>
+                            </div>
+                            <textarea 
+                                value={jsonText} 
+                                onChange={handleJsonChange}
+                                className="flex-1 bg-[#121212] p-4 text-[#3b82f6] font-mono text-[10px] sm:text-xs focus:outline-none resize-none leading-relaxed"
+                                spellCheck="false"
+                            ></textarea>
+                        </div>
+
+                        {/* 2. CANVAS PREVIEW (Monitor Premiere) */}
+                        <div className="flex-1 flex flex-col panel border-x-0">
+                            <div className="h-10 bg-[#1a1a1a] border-b border-[#2d2d2d] flex items-center px-4">
+                                <span className="text-xs font-bold text-gray-400"><i className="fas fa-desktop mr-2"></i>Monitor Visual</span>
                                 <span className="ml-auto font-mono text-xs text-blue-400">{time.toFixed(2)} / {data.config.duration.toFixed(2)}</span>
                             </div>
                             
@@ -349,7 +320,6 @@
                                 </div>
                             </div>
 
-                            {/* CONTROLES DE REPRODUCCIÓN */}
                             <div className="h-12 bg-[#1a1a1a] border-t border-[#2d2d2d] flex items-center justify-center space-x-4">
                                 <button onClick={() => setTime(0)} className="text-gray-400 hover:text-white px-2"><i className="fas fa-backward-step"></i></button>
                                 <button onClick={() => setIsPlaying(!isPlaying)} className="w-8 h-8 bg-blue-600 hover:bg-blue-500 rounded text-white flex items-center justify-center shadow-lg">
@@ -359,10 +329,10 @@
                             </div>
                         </div>
 
-                        {/* INSPECTOR DE PROPIEDADES (Lado Derecho) */}
-                        <div className="w-[320px] panel flex flex-col border-l-0">
+                        {/* 3. INSPECTOR DE PROPIEDADES */}
+                        <div className="w-full md:w-[280px] lg:w-[320px] panel flex flex-col border-l border-[#2d2d2d]">
                             <div className="h-10 bg-[#1a1a1a] border-b border-[#2d2d2d] flex items-center px-4">
-                                <span className="text-xs font-bold text-gray-400">Controles de Efectos</span>
+                                <span className="text-xs font-bold text-gray-400"><i className="fas fa-sliders mr-2"></i>Controles de Efectos</span>
                             </div>
                             
                             <div className="flex-1 overflow-y-auto p-4 space-y-5">
@@ -370,13 +340,11 @@
                                     <p className="text-xs text-gray-500 text-center mt-10">Selecciona un clip en el monitor o la línea de tiempo.</p>
                                 ) : (
                                     <>
-                                        {/* INFO DEL CLIP */}
                                         <div className="flex items-center space-x-2">
                                             <i className={`fas ${selectedElement.type === 'text' ? 'fa-font text-blue-400' : selectedElement.type === 'image' ? 'fa-image text-emerald-400' : 'fa-square text-purple-400'}`}></i>
                                             <span className="text-sm font-bold truncate">{selectedElement.id}</span>
                                         </div>
 
-                                        {/* CONTROLES DE IMAGEN / TEXTO */}
                                         {selectedElement.type === 'text' && (
                                             <div>
                                                 <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Texto</label>
@@ -392,18 +360,11 @@
                                             </label>
                                         </div>
 
-                                        {/* TRANSFORMACIÓN (POSICIÓN, ESCALA) */}
                                         <div>
                                             <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-2 block border-b border-[#2d2d2d] pb-1">Movimiento</label>
                                             <div className="grid grid-cols-2 gap-3 mt-2">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] text-gray-500 mb-1">Posición X</span>
-                                                    <input type="number" value={Math.round(selectedElement.x)} onChange={e => updateElementProperty('x', parseInt(e.target.value))} className="input-dark" />
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] text-gray-500 mb-1">Posición Y</span>
-                                                    <input type="number" value={Math.round(selectedElement.y)} onChange={e => updateElementProperty('y', parseInt(e.target.value))} className="input-dark" />
-                                                </div>
+                                                <div className="flex flex-col"><span className="text-[10px] text-gray-500 mb-1">Posición X</span><input type="number" value={Math.round(selectedElement.x)} onChange={e => updateElementProperty('x', parseInt(e.target.value))} className="input-dark" /></div>
+                                                <div className="flex flex-col"><span className="text-[10px] text-gray-500 mb-1">Posición Y</span><input type="number" value={Math.round(selectedElement.y)} onChange={e => updateElementProperty('y', parseInt(e.target.value))} className="input-dark" /></div>
                                             </div>
                                             {(selectedElement.type === 'rect' || selectedElement.type === 'image') && (
                                                 <div className="grid grid-cols-2 gap-3 mt-3">
@@ -418,21 +379,18 @@
                         </div>
                     </div>
 
-                    {/* ZONA INFERIOR: LÍNEA DE TIEMPO ESTILO CAPCUT */}
+                    {/* ZONA INFERIOR: LÍNEA DE TIEMPO */}
                     <div className="h-[40%] panel flex flex-col border-t-0 border-l-0 border-r-0">
-                        {/* TOOLBAR TIMELINE */}
                         <div className="h-10 bg-[#1a1a1a] border-b border-[#2d2d2d] flex items-center px-4 justify-between">
                             <div className="flex space-x-2">
                                 <button onClick={() => handleAddElement('rect')} className="bg-[#27272a] hover:bg-[#3f3f46] text-gray-300 text-[11px] px-3 py-1 rounded border border-[#3f3f46] transition"><i className="fas fa-plus mr-1 text-purple-400"></i>Forma</button>
                                 <button onClick={() => handleAddElement('text')} className="bg-[#27272a] hover:bg-[#3f3f46] text-gray-300 text-[11px] px-3 py-1 rounded border border-[#3f3f46] transition"><i className="fas fa-plus mr-1 text-blue-400"></i>Texto</button>
                             </div>
-                            <button className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] px-4 py-1 rounded flex items-center"><i className="fas fa-share-from-square mr-2"></i>Exportar Video</button>
                         </div>
 
                         <div className="flex flex-1 overflow-hidden relative">
-                            {/* COLUMNA IZQ: NOMBRES DE PISTAS */}
                             <div className="w-[180px] bg-[#1a1a1a] border-r border-[#2d2d2d] overflow-y-auto hidden md:block">
-                                <div className="h-6 border-b border-[#2d2d2d]"></div> {/* Header filler */}
+                                <div className="h-6 border-b border-[#2d2d2d]"></div>
                                 {data.elements.map(el => (
                                     <div key={`title-${el.id}`} className={`h-12 border-b border-[#2d2d2d] flex items-center px-2 cursor-pointer ${selectedId === el.id ? 'bg-[#27272a]' : ''}`} onClick={() => setSelectedId(el.id)}>
                                         <i className={`fas ${el.type === 'text' ? 'fa-font text-blue-400' : el.type === 'image' ? 'fa-image text-emerald-400' : 'fa-square text-purple-400'} text-[10px] w-4`}></i>
@@ -441,44 +399,28 @@
                                 ))}
                             </div>
 
-                            {/* PISTAS DE TIEMPO */}
                             <div className="flex-1 bg-[#121212] overflow-auto relative">
-                                {/* REGLA DE TIEMPO TOP */}
                                 <div className="h-6 border-b border-[#2d2d2d] bg-[#1a1a1a] relative cursor-text" ref={timelineRef} onMouseDown={handleTimelineClick} onMouseMove={handleTimelineDrag}>
-                                    {/* Playhead Vertical */}
-                                    <div className="playhead-line" style={{ left: `${(time / data.config.duration) * 100}%` }}>
-                                        <div className="playhead-head"></div>
-                                    </div>
-                                    {/* Marcadores de segundos */}
+                                    <div className="playhead-line" style={{ left: `${(time / data.config.duration) * 100}%` }}><div className="playhead-head"></div></div>
                                     {[...Array(Math.ceil(data.config.duration) + 1)].map((_, i) => (
                                         <div key={i} className="absolute text-[9px] text-gray-500 top-1" style={{ left: `${(i / data.config.duration) * 100}%` }}>
-                                            <div className="w-[1px] h-1.5 bg-[#3f3f46] mx-auto mb-0.5"></div>
-                                            {i}s
+                                            <div className="w-[1px] h-1.5 bg-[#3f3f46] mx-auto mb-0.5"></div>{i}s
                                         </div>
                                     ))}
                                 </div>
-
-                                {/* CONTENEDOR DE PISTAS */}
                                 <div className="relative min-w-full">
                                     {data.elements.map(el => (
                                         <div key={`track-${el.id}`} onClick={() => setSelectedId(el.id)} className={`h-12 border-b border-[#2d2d2d] track-bg relative ${selectedId === el.id ? 'bg-[#18181b]' : ''}`}>
-                                            
-                                            {/* BLOQUE DEL CLIP (Simulado al 100% de duración por ahora) */}
                                             <div className={`absolute top-2 h-8 rounded text-[10px] pl-2 flex items-center overflow-hidden border ${selectedId === el.id ? 'border-white bg-[#27272a]' : 'border-[#3f3f46] bg-[#1e1e1e]'}`} style={{ left: '0%', width: '100%' }}>
-                                                <span className="truncate md:hidden mr-2">{el.id}</span> {/* Nombre para móviles */}
-                                                
-                                                {/* DIBUJO DE KEYFRAMES (Diamantes) */}
+                                                <span className="truncate md:hidden mr-2">{el.id}</span>
                                                 {el.animations?.map((anim, idx) => {
                                                     const leftPercent = (anim.start / data.config.duration) * 100;
                                                     const rightPercent = (anim.end / data.config.duration) * 100;
                                                     return (
                                                         <React.Fragment key={idx}>
-                                                            {/* Diamante Start */}
-                                                            <div className="absolute top-1/2 -translate-y-1/2 -ml-1 text-[#cbfb45] text-[12px] cursor-pointer" style={{ left: `${leftPercent}%` }} title={`Keyframe: ${anim.prop}`}>♦</div>
-                                                            {/* Línea conectora */}
+                                                            <div className="absolute top-1/2 -translate-y-1/2 -ml-1 text-[#cbfb45] text-[12px] cursor-pointer" style={{ left: `${leftPercent}%` }}>♦</div>
                                                             <div className="absolute top-1/2 -translate-y-1/2 h-[1px] bg-white/20 pointer-events-none" style={{ left: `${leftPercent}%`, width: `${rightPercent - leftPercent}%` }}></div>
-                                                            {/* Diamante End */}
-                                                            <div className="absolute top-1/2 -translate-y-1/2 -ml-1 text-[#cbfb45] text-[12px] cursor-pointer" style={{ left: `${rightPercent}%` }} title={`Keyframe: ${anim.prop}`}>♦</div>
+                                                            <div className="absolute top-1/2 -translate-y-1/2 -ml-1 text-[#cbfb45] text-[12px] cursor-pointer" style={{ left: `${rightPercent}%` }}>♦</div>
                                                         </React.Fragment>
                                                     );
                                                 })}
