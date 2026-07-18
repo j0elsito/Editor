@@ -3,19 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vibe Studio Pro | Editor de Keyframes & Línea de Tiempo</title>
+    <title>Vibe Studio Pro | Timeline & Drag Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        body { background-color: #020617; color: #f1f5f9; font-family: 'Inter', sans-serif; margin: 0; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        input[type="range"] { accent-color: #cbfb45; }
-        .keyframe-input { background: #020617; border: 1px solid #334155; color: white; padding: 2px 4px; border-radius: 4px; font-size: 11px; width: 100%; }
-        .keyframe-input:focus { outline: none; border-color: #cbfb45; }
+        body { background-color: #121212; color: #e5e5e5; font-family: 'Inter', system-ui, sans-serif; margin: 0; overflow: hidden; user-select: none; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: #18181b; }
+        
+        /* Tema CapCut / Premiere */
+        .panel { background-color: #1e1e1e; border: 1px solid #2d2d2d; }
+        .track-bg { background-color: #262626; }
+        .track-item { background-color: #3f3f46; border: 1px solid #52525b; }
+        .playhead-line { position: absolute; top: 0; bottom: 0; width: 2px; background-color: #3b82f6; z-index: 50; pointer-events: none; }
+        .playhead-head { position: absolute; top: 0; transform: translateX(-50%); width: 10px; height: 12px; background-color: #3b82f6; clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%); cursor: ew-resize; z-index: 51;}
+        
+        input[type="range"] { accent-color: #3b82f6; }
+        .input-dark { background: #121212; border: 1px solid #3f3f46; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; width: 100%; }
+        .input-dark:focus { outline: none; border-color: #3b82f6; }
     </style>
 </head>
 <body>
@@ -25,19 +34,18 @@
         const { useState, useEffect, useRef } = React;
 
         const initialJSON = {
-          "config": { "width": 1080, "height": 1920, "fps": 60, "duration": 5.0, "background": "#0f172a" },
+          "config": { "width": 1080, "height": 1920, "fps": 60, "duration": 6.0, "background": "#000000" },
           "elements": [
             {
-              "id": "mi_primer_clip", "type": "rect", "x": 540, "y": 960, "width": 400, "height": 400, "borderRadius": 40, "color": "#38bdf8", "anchor": "center",
+              "id": "caja_ejemplo", "type": "rect", "x": 540, "y": 960, "width": 350, "height": 350, "borderRadius": 40, "color": "#3b82f6", "anchor": "center",
               "animations": [
-                { "prop": "scale", "from": 0, "to": 1, "start": 0.5, "end": 1.5, "ease": "easeOutBounce" },
-                { "prop": "rotation", "from": -90, "to": 0, "start": 0.5, "end": 1.5, "ease": "easeOutBounce" }
+                { "prop": "scale", "from": 0, "to": 1, "start": 0.5, "end": 1.5, "ease": "easeOutBounce" }
               ]
             },
             {
-              "id": "texto_bienvenida", "type": "text", "text": "¡EDITOR ACTIVO!", "x": 540, "y": 960, "fontSize": 50, "color": "#0f172a",
+              "id": "texto_titulo", "type": "text", "text": "ARRASTRAME", "x": 540, "y": 960, "fontSize": 50, "color": "#ffffff",
               "animations": [
-                { "prop": "scale", "from": 0, "to": 1, "start": 0.8, "end": 1.8, "ease": "easeOutBounce" }
+                { "prop": "opacity", "from": 0, "to": 1, "start": 1.0, "end": 2.0, "ease": "linear" }
               ]
             }
           ]
@@ -56,34 +64,23 @@
             }
         };
 
-        const hexToRgb = (hex) => {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 0, g: 0, b: 0 };
-        };
-
-        const interpolateColor = (color1, color2, factor) => {
-            const c1 = hexToRgb(color1); const c2 = hexToRgb(color2);
-            return `rgb(${Math.round(c1.r + factor * (c2.r - c1.r))}, ${Math.round(c1.g + factor * (c2.g - c1.g))}, ${Math.round(c1.b + factor * (c2.b - c1.b))})`;
-        };
-
         function App() {
             const [data, setData] = useState(initialJSON);
-            const [jsonText, setJsonText] = useState(JSON.stringify(initialJSON, null, 2));
             const [time, setTime] = useState(0);
             const [isPlaying, setIsPlaying] = useState(false);
             const [isExporting, setIsExporting] = useState(false);
-            const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
             const [selectedId, setSelectedId] = useState(null);
             const [imagesAssets, setImagesAssets] = useState({});
             
+            // Estados para DRAG & DROP en Canvas
+            const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
+            const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
             const canvasRef = useRef(null);
             const animRef = useRef(null);
+            const timelineRef = useRef(null);
 
-            const updateDataState = (newData) => {
-                setData(newData);
-                setJsonText(JSON.stringify(newData, null, 2));
-            };
-
+            // --- CARGA DE IMÁGENES ---
             const loadImages = async (elements) => {
                 const loaded = { ...imagesAssets };
                 const promises = elements.filter(el => el.type === 'image' && el.src).map(el => {
@@ -99,9 +96,9 @@
                 await Promise.all(promises);
                 setImagesAssets(loaded);
             };
-
             useEffect(() => { loadImages(data.elements); }, [data]);
 
+            // --- MOTOR DE ANIMACIÓN ---
             const getAnimatedValue = (element, propName, defaultValue, currentT) => {
                 const anims = element.animations?.filter(a => a.prop === propName);
                 if (!anims || anims.length === 0) return defaultValue;
@@ -112,11 +109,8 @@
                     if (currentT >= anim.end) { currentValue = anim.to; continue; }
                     const progress = (currentT - anim.start) / (anim.end - anim.start);
                     const easeFn = Easing[anim.ease || 'linear'] || Easing.linear;
-                    if (propName.toLowerCase().includes('color')) {
-                        currentValue = interpolateColor(anim.from, anim.to, easeFn(progress));
-                    } else {
-                        currentValue = anim.from + (anim.to - anim.from) * easeFn(progress);
-                    }
+                    if (propName.toLowerCase().includes('color')) return defaultValue; // Simplificado para color
+                    currentValue = anim.from + (anim.to - anim.from) * easeFn(progress);
                 }
                 return currentValue;
             };
@@ -137,16 +131,10 @@
                     const opacity = getAnimatedValue(el, 'opacity', el.opacity !== undefined ? el.opacity : 1, currentT);
                     const rot = getAnimatedValue(el, 'rotation', el.rotation || 0, currentT);
                     const blur = getAnimatedValue(el, 'blur', el.blur || 0, currentT);
-                    const shadowBlur = getAnimatedValue(el, 'shadowBlur', el.shadowBlur || 0, currentT);
-                    const color = el.type !== 'image' ? getAnimatedValue(el, 'color', el.color || "#ffffff", currentT) : null;
+                    const color = el.color || "#ffffff";
 
                     ctx.globalAlpha = Math.max(0, Math.min(1, opacity));
                     if (blur > 0) ctx.filter = `blur(${blur}px)`;
-
-                    if (shadowBlur > 0) {
-                        ctx.shadowBlur = shadowBlur;
-                        ctx.shadowColor = getAnimatedValue(el, 'shadowColor', el.shadowColor || color || "#000000", currentT);
-                    }
                     
                     ctx.translate(x, y);
                     ctx.rotate(rot * Math.PI / 180);
@@ -154,15 +142,14 @@
 
                     if (el.type === 'image' && imagesAssets[el.id]) {
                         const img = imagesAssets[el.id];
-                        const w = getAnimatedValue(el, 'width', el.width || img.width, currentT);
-                        const h = getAnimatedValue(el, 'height', el.height || img.height, currentT);
+                        const w = el.width || img.width;
+                        const h = el.height || img.height;
                         if (el.anchor === 'center') ctx.drawImage(img, -w/2, -h/2, w, h);
                         else ctx.drawImage(img, 0, 0, w, h);
                     }
                     else if (el.type === 'rect') {
-                        const w = getAnimatedValue(el, 'width', el.width, currentT);
-                        const h = getAnimatedValue(el, 'height', el.height, currentT);
-                        const radius = getAnimatedValue(el, 'borderRadius', el.borderRadius || 0, currentT);
+                        const w = el.width || 100; const h = el.height || 100;
+                        const radius = el.borderRadius || 0;
                         ctx.fillStyle = color;
                         ctx.beginPath();
                         if (el.anchor === 'center') {
@@ -172,42 +159,46 @@
                         }
                         ctx.fill();
                     } 
-                    else if (el.type === 'circle') {
-                        const r = getAnimatedValue(el, 'radius', el.radius, currentT);
-                        ctx.fillStyle = color;
-                        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-                    }
                     else if (el.type === 'text') {
                         ctx.fillStyle = color;
-                        ctx.font = `${el.fontWeight || 'bold'} ${el.fontSize}px ${el.fontFamily || 'sans-serif'}`;
-                        ctx.textAlign = el.textAlign || "center";
-                        ctx.textBaseline = "middle";
+                        ctx.font = `bold ${el.fontSize}px sans-serif`;
+                        ctx.textAlign = "center"; ctx.textBaseline = "middle";
                         ctx.fillText(el.text, 0, 0);
                     }
 
+                    // CAJA DE SELECCIÓN ESTILO PREMIERE
                     if (el.id === selectedId && !isExporting) {
-                        ctx.strokeStyle = "#cbfb45";
-                        ctx.lineWidth = 6 / scale; 
-                        ctx.setLineDash([15 / scale, 15 / scale]);
-                        const w = el.width || (el.radius ? el.radius * 2 : 200);
-                        const h = el.height || (el.radius ? el.radius * 2 : 100);
-                        if (el.anchor === 'center' || el.type === 'circle' || el.type === 'text') {
-                            ctx.strokeRect(-w/2 - 10, -h/2 - 10, w + 20, h + 20);
-                        } else { ctx.strokeRect(-10, -10, w + 20, h + 20); }
+                        ctx.strokeStyle = "#3b82f6";
+                        ctx.lineWidth = 4 / scale; 
+                        const w = el.width || 200; const h = el.height || 100;
+                        const offset = el.anchor === 'center' || el.type === 'text' ? {x: -w/2, y: -h/2} : {x: 0, y: 0};
+                        
+                        ctx.strokeRect(offset.x - 5, offset.y - 5, w + 10, h + 10);
+                        
+                        // Puntos de control (esquinas)
+                        ctx.fillStyle = "#ffffff";
+                        const dotSize = 12 / scale;
+                        const drawDot = (dx, dy) => ctx.fillRect(dx - dotSize/2, dy - dotSize/2, dotSize, dotSize);
+                        drawDot(offset.x - 5, offset.y - 5);
+                        drawDot(offset.x + w + 5, offset.y - 5);
+                        drawDot(offset.x - 5, offset.y + h + 5);
+                        drawDot(offset.x + w + 5, offset.y + h + 5);
                     }
                     ctx.restore();
                 });
             };
 
+            // --- BUCLE DE REPRODUCCIÓN ---
             useEffect(() => {
                 if (isPlaying && !isExporting) {
                     let lastTime = performance.now();
                     const loop = (now) => {
-                        const dt = ((now - lastTime) / 1000) * playbackSpeed;
+                        const dt = (now - lastTime) / 1000;
                         lastTime = now;
                         setTime(prev => {
                             const next = prev + dt;
-                            return next > data.config.duration ? 0 : next;
+                            if (next >= data.config.duration) { setIsPlaying(false); return 0; }
+                            return next;
                         });
                         animRef.current = requestAnimationFrame(loop);
                     };
@@ -216,36 +207,96 @@
                     cancelAnimationFrame(animRef.current);
                 }
                 return () => cancelAnimationFrame(animRef.current);
-            }, [isPlaying, data.config.duration, isExporting, playbackSpeed]);
+            }, [isPlaying, data.config.duration, isExporting]);
 
             useEffect(() => { if (!isExporting) renderCanvas(time); }, [time, data, isExporting, selectedId, imagesAssets]);
 
-            const handleCanvasClick = (e) => {
+
+            // --- DRAG AND DROP EN CANVAS ---
+            const getCanvasMousePos = (e) => {
                 const canvas = canvasRef.current;
                 const rect = canvas.getBoundingClientRect();
                 const scaleX = canvas.width / rect.width;
                 const scaleY = canvas.height / rect.height;
-                const clickX = (e.clientX - rect.left) * scaleX;
-                const clickY = (e.clientY - rect.top) * scaleY;
+                return {
+                    x: (e.clientX || e.touches?.[0].clientX) - rect.left,
+                    y: (e.clientY || e.touches?.[0].clientY) - rect.top,
+                    scaleX, scaleY
+                };
+            };
+
+            const handleCanvasMouseDown = (e) => {
+                const { x: rawX, y: rawY, scaleX, scaleY } = getCanvasMousePos(e);
+                const clickX = rawX * scaleX;
+                const clickY = rawY * scaleY;
                 
                 let hitId = null;
                 for (let i = data.elements.length - 1; i >= 0; i--) {
                     const el = data.elements[i];
-                    const x = getAnimatedValue(el, 'x', el.x || 0, time);
-                    const y = getAnimatedValue(el, 'y', el.y || 0, time);
-                    const w = el.width || (el.radius ? el.radius * 2 : 300);
-                    const h = el.height || (el.radius ? el.radius * 2 : 100);
-                    let minX = el.anchor === 'center' || el.type === 'circle' || el.type === 'text' ? x - w/2 : x;
-                    let minY = el.anchor === 'center' || el.type === 'circle' || el.type === 'text' ? y - h/2 : y;
-                    if (clickX >= minX && clickX <= minX + w && clickY >= minY && clickY <= minY + h) { hitId = el.id; break; }
+                    const elX = getAnimatedValue(el, 'x', el.x || 0, time);
+                    const elY = getAnimatedValue(el, 'y', el.y || 0, time);
+                    const w = el.width || 300; const h = el.height || 100;
+                    
+                    let minX = el.anchor === 'center' || el.type === 'text' ? elX - w/2 : elX;
+                    let minY = el.anchor === 'center' || el.type === 'text' ? elY - h/2 : elY;
+
+                    if (clickX >= minX && clickX <= minX + w && clickY >= minY && clickY <= minY + h) {
+                        hitId = el.id;
+                        setDragOffset({ x: clickX - (el.x || 0), y: clickY - (el.y || 0) });
+                        break;
+                    }
                 }
+                
                 setSelectedId(hitId);
+                if (hitId) setIsDraggingCanvas(true);
             };
 
+            const handleCanvasMouseMove = (e) => {
+                if (!isDraggingCanvas || !selectedId) return;
+                const { x: rawX, y: rawY, scaleX, scaleY } = getCanvasMousePos(e);
+                const currentMouseX = rawX * scaleX;
+                const currentMouseY = rawY * scaleY;
+
+                const newX = currentMouseX - dragOffset.x;
+                const newY = currentMouseY - dragOffset.y;
+
+                // Actualiza la posición BASE del elemento
+                const newElements = data.elements.map(el => 
+                    el.id === selectedId ? { ...el, x: Math.round(newX), y: Math.round(newY) } : el
+                );
+                setData({ ...data, elements: newElements });
+            };
+
+            const handleCanvasMouseUp = () => setIsDraggingCanvas(false);
+
+            // --- SCRUBBING EN TIMELINE (Mover el tiempo) ---
+            const handleTimelineClick = (e) => {
+                if (!timelineRef.current) return;
+                const rect = timelineRef.current.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+                setTime(percentage * data.config.duration);
+            };
+
+            const handleTimelineDrag = (e) => {
+                if (e.buttons !== 1) return; // Solo si el click izq está presionado
+                handleTimelineClick(e);
+            };
+
+            // --- FUNCIONES DE EDICIÓN ---
             const updateElementProperty = (prop, value) => {
                 if(!selectedId) return;
                 const newElements = data.elements.map(el => el.id === selectedId ? { ...el, [prop]: value } : el);
-                updateDataState({ ...data, elements: newElements });
+                setData({ ...data, elements: newElements });
+            };
+
+            const handleAddElement = (type) => {
+                const newId = `Capa_${data.elements.length + 1}`;
+                const newElement = { id: newId, type: type, x: 540, y: 960, anchor: "center", animations: [] };
+                if(type === 'rect') { newElement.width = 250; newElement.height = 250; newElement.color = "#cbfb45"; }
+                if(type === 'text') { newElement.text = "NUEVO TEXTO"; newElement.fontSize = 60; newElement.color = "#ffffff"; }
+                setData({ ...data, elements: [...data.elements, newElement] });
+                setSelectedId(newId);
             };
 
             const handleImageUpload = (e) => {
@@ -253,291 +304,189 @@
                 if (!file || !selectedId) return;
                 const objectUrl = URL.createObjectURL(file);
                 const newElements = data.elements.map(el => {
-                    if (el.id === selectedId) return { ...el, type: 'image', src: objectUrl, _originalType: el.type !== 'image' ? el.type : (el._originalType || 'rect') };
+                    if (el.id === selectedId) return { ...el, type: 'image', src: objectUrl, width: 300, height: 300 };
                     return el;
                 });
-                updateDataState({ ...data, elements: newElements });
-            };
-
-            const handleRemoveImage = () => {
-                if(!selectedId) return;
-                const newElements = data.elements.map(el => {
-                    if (el.id === selectedId) {
-                        const { src, _originalType, ...rest } = el;
-                        return { ...rest, type: _originalType || 'rect' };
-                    }
-                    return el;
-                });
-                updateDataState({ ...data, elements: newElements });
-                const newAssets = {...imagesAssets}; delete newAssets[selectedId]; setImagesAssets(newAssets);
-            };
-
-            // --- NUEVAS FUNCIONES DE LÍNEA DE TIEMPO Y KEYFRAMES ---
-            
-            const handleAddElement = (type = 'rect') => {
-                const newId = `capa_${Math.floor(Math.random() * 1000)}`;
-                const newElement = {
-                    id: newId, type: type, x: 540, y: 960, anchor: "center", animations: []
-                };
-                if(type === 'rect') { newElement.width = 300; newElement.height = 300; newElement.color = "#cbfb45"; newElement.borderRadius = 30; }
-                if(type === 'text') { newElement.text = "NUEVO TEXTO"; newElement.fontSize = 60; newElement.color = "#ffffff"; }
-                
-                updateDataState({ ...data, elements: [...data.elements, newElement] });
-                setSelectedId(newId);
-            };
-
-            const handleDeleteElement = () => {
-                if(!selectedId) return;
-                const newElements = data.elements.filter(el => el.id !== selectedId);
-                updateDataState({ ...data, elements: newElements });
-                setSelectedId(null);
+                setData({ ...data, elements: newElements });
             };
 
             const handleAddKeyframe = () => {
                 if(!selectedId) return;
-                const newElements = data.elements.map(el => {
-                    if (el.id === selectedId) {
-                        const newAnims = [...(el.animations || []), { prop: "y", from: 0, to: 100, start: 0, end: 1, ease: "easeOut" }];
-                        return { ...el, animations: newAnims };
-                    }
-                    return el;
-                });
-                updateDataState({ ...data, elements: newElements });
-            };
-
-            const handleUpdateKeyframe = (index, field, value) => {
-                if(!selectedId) return;
-                const newElements = data.elements.map(el => {
-                    if (el.id === selectedId) {
-                        const newAnims = [...el.animations];
-                        let finalValue = value;
-                        if (['from', 'to', 'start', 'end'].includes(field)) finalValue = parseFloat(value) || 0;
-                        newAnims[index] = { ...newAnims[index], [field]: finalValue };
-                        return { ...el, animations: newAnims };
-                    }
-                    return el;
-                });
-                updateDataState({ ...data, elements: newElements });
-            };
-
-            const handleDeleteKeyframe = (index) => {
-                if(!selectedId) return;
-                const newElements = data.elements.map(el => {
-                    if (el.id === selectedId) {
-                        const newAnims = el.animations.filter((_, i) => i !== index);
-                        return { ...el, animations: newAnims };
-                    }
-                    return el;
-                });
-                updateDataState({ ...data, elements: newElements });
-            };
-            // -----------------------------------------------------
-
-            const handleExport = async () => {
-                if (!canvasRef.current) return;
-                setSelectedId(null); setIsPlaying(false); setIsExporting(true); setTime(0);
-                await new Promise(r => setTimeout(r, 50));
-
-                const stream = canvasRef.current.captureStream(data.config.fps);
-                const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 15000000 });
-                const chunks = [];
-                
-                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(chunks, { type: 'video/webm' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a'); a.href = url; a.download = `render_${Date.now()}.webm`; a.click();
-                    setIsExporting(false); setTime(0); renderCanvas(0);
-                };
-
-                mediaRecorder.start();
-                let startTime = performance.now();
-                let exportFrameId;
-
-                const exportLoop = (now) => {
-                    const elapsedTime = ((now - startTime) / 1000) * playbackSpeed;
-                    if (elapsedTime > data.config.duration) { mediaRecorder.stop(); cancelAnimationFrame(exportFrameId); return; }
-                    setTime(elapsedTime); renderCanvas(elapsedTime);
-                    exportFrameId = requestAnimationFrame(exportLoop);
-                };
-                exportFrameId = requestAnimationFrame(exportLoop);
-            };
-
-            const handleJsonChange = (e) => {
-                setJsonText(e.target.value);
-                try { const parsed = JSON.parse(e.target.value); setData(parsed); } catch(err) {}
+                const el = data.elements.find(e => e.id === selectedId);
+                const newAnims = [...(el.animations || []), { prop: "x", from: el.x, to: el.x + 200, start: time, end: Math.min(time + 1, data.config.duration), ease: "easeOut" }];
+                updateElementProperty('animations', newAnims);
             };
 
             const selectedElement = data.elements.find(el => el.id === selectedId);
 
             return (
-                <div className="flex flex-col lg:flex-row h-screen w-full bg-slate-950 overflow-y-auto lg:overflow-hidden">
+                <div className="flex flex-col h-screen w-full bg-[#121212]">
                     
-                    {/* PANEL CENTRAL: CANVAS, REPRODUCTOR Y LÍNEA DE TIEMPO */}
-                    <div className="order-1 lg:order-2 w-full lg:flex-1 flex flex-col relative min-h-[60vh] lg:h-full border-b lg:border-b-0 border-slate-800">
+                    {/* ZONA SUPERIOR: MONITOR Y PROPIEDADES */}
+                    <div className="flex flex-1 h-[60%] border-b border-[#2d2d2d]">
                         
-                        {/* CANVAS */}
-                        <div className="flex-1 flex items-center justify-center p-4 overflow-hidden relative">
-                            {isExporting && (
-                                <div className="absolute inset-0 bg-black/90 z-50 flex items-center justify-center flex-col backdrop-blur-md">
-                                    <i className="fas fa-compact-disc animate-spin text-4xl text-amber-500 mb-4"></i>
-                                    <h2 className="text-xl font-bold">Renderizando...</h2>
-                                </div>
-                            )}
-                            <div className="relative shadow-2xl shadow-indigo-900/10 border border-slate-800 rounded-lg overflow-hidden bg-black h-full max-h-[70vh] aspect-[9/16]">
-                                <canvas ref={canvasRef} width={data.config.width} height={data.config.height} onClick={handleCanvasClick} className="w-full h-full object-contain cursor-crosshair"></canvas>
+                        {/* CANVAS PREVIEW (Estilo Monitor Premiere) */}
+                        <div className="flex-1 flex flex-col panel">
+                            <div className="h-10 bg-[#1a1a1a] border-b border-[#2d2d2d] flex items-center px-4">
+                                <span className="text-xs font-bold text-gray-400">Monitor de Programa</span>
+                                <span className="ml-auto font-mono text-xs text-blue-400">{time.toFixed(2)} / {data.config.duration.toFixed(2)}</span>
                             </div>
-                        </div>
+                            
+                            <div className="flex-1 flex items-center justify-center p-4 overflow-hidden relative bg-black/50 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjMjIyIi8+PHJlY3QgeD0iMTAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iIzExMSIvPjxyZWN0IHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiMxMTEiLz48cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iIzIyMiIvPjwvc3ZnPg==')]">
+                                <div className="relative shadow-2xl border border-[#3f3f46] h-full max-h-[100%] aspect-[9/16]">
+                                    <canvas 
+                                        ref={canvasRef} 
+                                        width={data.config.width} height={data.config.height} 
+                                        onMouseDown={handleCanvasMouseDown}
+                                        onMouseMove={handleCanvasMouseMove}
+                                        onMouseUp={handleCanvasMouseUp}
+                                        onMouseLeave={handleCanvasMouseUp}
+                                        onTouchStart={handleCanvasMouseDown}
+                                        onTouchMove={handleCanvasMouseMove}
+                                        onTouchEnd={handleCanvasMouseUp}
+                                        className={`w-full h-full object-contain ${isDraggingCanvas ? 'cursor-grabbing' : 'cursor-grab'}`}
+                                    ></canvas>
+                                </div>
+                            </div>
 
-                        {/* REPRODUCTOR */}
-                        <div className="bg-slate-900 border-t border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-4 z-10">
-                            <div className="flex items-center space-x-3">
-                                <button onClick={() => setTime(0)} className="text-slate-400 hover:text-white text-lg"><i className="fas fa-backward-step"></i></button>
-                                <button onClick={() => setIsPlaying(!isPlaying)} className="w-10 h-10 bg-amber-500 hover:bg-amber-400 rounded-full text-black flex items-center justify-center text-lg shadow-lg">
-                                    <i className={`fas ${isPlaying ? 'fa-pause' : 'fa-play ml-1'}`}></i>
+                            {/* CONTROLES DE REPRODUCCIÓN */}
+                            <div className="h-12 bg-[#1a1a1a] border-t border-[#2d2d2d] flex items-center justify-center space-x-4">
+                                <button onClick={() => setTime(0)} className="text-gray-400 hover:text-white px-2"><i className="fas fa-backward-step"></i></button>
+                                <button onClick={() => setIsPlaying(!isPlaying)} className="w-8 h-8 bg-blue-600 hover:bg-blue-500 rounded text-white flex items-center justify-center shadow-lg">
+                                    <i className={`fas ${isPlaying ? 'fa-pause' : 'fa-play ml-0.5'}`}></i>
                                 </button>
-                                <span className="font-mono text-amber-500 text-xs font-bold bg-slate-950 px-2 py-1 rounded border border-slate-800">
-                                    {time.toFixed(2)}s / {data.config.duration}s
-                                </span>
+                                <button className="text-gray-400 hover:text-white px-2"><i className="fas fa-forward-step"></i></button>
                             </div>
-                            <button onClick={handleExport} className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-4 py-2 rounded shadow-lg flex items-center justify-center space-x-2 text-sm">
-                                <i className="fas fa-video"></i> <span>Exportar</span>
-                            </button>
                         </div>
 
-                        {/* LÍNEA DE TIEMPO / CAPAS (NUEVO) */}
-                        <div className="bg-slate-950 h-48 border-t border-slate-800 flex flex-col">
-                            <div className="flex justify-between items-center p-2 border-b border-slate-800 bg-slate-900">
-                                <span className="text-xs font-bold text-amber-500"><i className="fas fa-layer-group mr-2"></i>LÍNEA DE TIEMPO / CLIPS</span>
-                                <div className="space-x-2 flex">
-                                    <button onClick={() => handleAddElement('rect')} className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-[10px] px-2 py-1 rounded"><i className="fas fa-square mr-1"></i>+ Forma</button>
-                                    <button onClick={() => handleAddElement('text')} className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-[10px] px-2 py-1 rounded"><i className="fas fa-font mr-1"></i>+ Texto</button>
-                                    {selectedId && <button onClick={handleDeleteElement} className="bg-red-900 hover:bg-red-800 text-red-200 text-[10px] px-2 py-1 rounded border border-red-800"><i className="fas fa-trash mr-1"></i>Eliminar Capa</button>}
-                                </div>
+                        {/* INSPECTOR DE PROPIEDADES (Lado Derecho) */}
+                        <div className="w-[320px] panel flex flex-col border-l-0">
+                            <div className="h-10 bg-[#1a1a1a] border-b border-[#2d2d2d] flex items-center px-4">
+                                <span className="text-xs font-bold text-gray-400">Controles de Efectos</span>
                             </div>
-                            <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                                {data.elements.map(el => (
-                                    <div key={el.id} onClick={() => setSelectedId(el.id)} className={`flex justify-between items-center p-2 rounded cursor-pointer text-xs border ${selectedId === el.id ? 'bg-slate-800 border-amber-500' : 'bg-slate-900 border-slate-800 hover:bg-slate-800'}`}>
-                                        <div className="flex items-center">
-                                            <i className={`fas ${el.type === 'image' ? 'fa-image text-emerald-400' : el.type === 'text' ? 'fa-font text-blue-400' : 'fa-square text-purple-400'} mr-3`}></i>
-                                            <span className="font-mono text-white truncate max-w-[150px]">{el.id}</span>
+                            
+                            <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                                {!selectedElement ? (
+                                    <p className="text-xs text-gray-500 text-center mt-10">Selecciona un clip en el monitor o la línea de tiempo.</p>
+                                ) : (
+                                    <>
+                                        {/* INFO DEL CLIP */}
+                                        <div className="flex items-center space-x-2">
+                                            <i className={`fas ${selectedElement.type === 'text' ? 'fa-font text-blue-400' : selectedElement.type === 'image' ? 'fa-image text-emerald-400' : 'fa-square text-purple-400'}`}></i>
+                                            <span className="text-sm font-bold truncate">{selectedElement.id}</span>
                                         </div>
-                                        <div className="text-slate-500 font-mono text-[10px]">{el.animations?.length || 0} anims</div>
+
+                                        {/* CONTROLES DE IMAGEN / TEXTO */}
+                                        {selectedElement.type === 'text' && (
+                                            <div>
+                                                <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Texto</label>
+                                                <input type="text" value={selectedElement.text} onChange={(e) => updateElementProperty('text', e.target.value)} className="input-dark" />
+                                            </div>
+                                        )}
+                                        
+                                        <div className="p-3 bg-[#18181b] rounded border border-[#2d2d2d]">
+                                            <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-2 block">Reemplazar Visual</label>
+                                            <label className="flex items-center justify-center w-full py-1.5 bg-[#27272a] hover:bg-[#3f3f46] border border-[#52525b] rounded cursor-pointer transition">
+                                                <span className="text-xs text-white"><i className="fas fa-upload mr-2"></i>Subir Archivo Local</span>
+                                                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                                            </label>
+                                        </div>
+
+                                        {/* TRANSFORMACIÓN (POSICIÓN, ESCALA) */}
+                                        <div>
+                                            <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-2 block border-b border-[#2d2d2d] pb-1">Movimiento</label>
+                                            <div className="grid grid-cols-2 gap-3 mt-2">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-gray-500 mb-1">Posición X</span>
+                                                    <input type="number" value={Math.round(selectedElement.x)} onChange={e => updateElementProperty('x', parseInt(e.target.value))} className="input-dark" />
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-gray-500 mb-1">Posición Y</span>
+                                                    <input type="number" value={Math.round(selectedElement.y)} onChange={e => updateElementProperty('y', parseInt(e.target.value))} className="input-dark" />
+                                                </div>
+                                            </div>
+                                            {(selectedElement.type === 'rect' || selectedElement.type === 'image') && (
+                                                <div className="grid grid-cols-2 gap-3 mt-3">
+                                                    <div className="flex flex-col"><span className="text-[10px] text-gray-500 mb-1">Ancho</span><input type="number" value={selectedElement.width || 0} onChange={e => updateElementProperty('width', parseInt(e.target.value))} className="input-dark" /></div>
+                                                    <div className="flex flex-col"><span className="text-[10px] text-gray-500 mb-1">Alto</span><input type="number" value={selectedElement.height || 0} onChange={e => updateElementProperty('height', parseInt(e.target.value))} className="input-dark" /></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ZONA INFERIOR: LÍNEA DE TIEMPO ESTILO CAPCUT */}
+                    <div className="h-[40%] panel flex flex-col border-t-0 border-l-0 border-r-0">
+                        {/* TOOLBAR TIMELINE */}
+                        <div className="h-10 bg-[#1a1a1a] border-b border-[#2d2d2d] flex items-center px-4 justify-between">
+                            <div className="flex space-x-2">
+                                <button onClick={() => handleAddElement('rect')} className="bg-[#27272a] hover:bg-[#3f3f46] text-gray-300 text-[11px] px-3 py-1 rounded border border-[#3f3f46] transition"><i className="fas fa-plus mr-1 text-purple-400"></i>Forma</button>
+                                <button onClick={() => handleAddElement('text')} className="bg-[#27272a] hover:bg-[#3f3f46] text-gray-300 text-[11px] px-3 py-1 rounded border border-[#3f3f46] transition"><i className="fas fa-plus mr-1 text-blue-400"></i>Texto</button>
+                            </div>
+                            <button className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] px-4 py-1 rounded flex items-center"><i className="fas fa-share-from-square mr-2"></i>Exportar Video</button>
+                        </div>
+
+                        <div className="flex flex-1 overflow-hidden relative">
+                            {/* COLUMNA IZQ: NOMBRES DE PISTAS */}
+                            <div className="w-[180px] bg-[#1a1a1a] border-r border-[#2d2d2d] overflow-y-auto hidden md:block">
+                                <div className="h-6 border-b border-[#2d2d2d]"></div> {/* Header filler */}
+                                {data.elements.map(el => (
+                                    <div key={`title-${el.id}`} className={`h-12 border-b border-[#2d2d2d] flex items-center px-2 cursor-pointer ${selectedId === el.id ? 'bg-[#27272a]' : ''}`} onClick={() => setSelectedId(el.id)}>
+                                        <i className={`fas ${el.type === 'text' ? 'fa-font text-blue-400' : el.type === 'image' ? 'fa-image text-emerald-400' : 'fa-square text-purple-400'} text-[10px] w-4`}></i>
+                                        <span className="text-[11px] truncate">{el.id}</span>
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    </div>
 
-                    {/* PANEL DERECHO: INSPECTOR Y KEYFRAMES (ACTUALIZADO) */}
-                    <div className="order-2 lg:order-3 w-full lg:w-[350px] min-h-[40vh] lg:h-full bg-slate-900 lg:border-l border-slate-800 flex flex-col z-20 overflow-y-auto">
-                        <div className="p-4 bg-slate-950 border-b border-slate-800 sticky top-0 z-10 flex justify-between items-center">
-                            <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-sliders mr-2"></i>INSPECTOR</h2>
-                        </div>
-                        
-                        <div className="p-4">
-                            {!selectedId ? (
-                                <div className="text-center py-10 opacity-50"><p className="text-sm">Selecciona una capa en la línea de tiempo o lienzo.</p></div>
-                            ) : (
-                                <div className="space-y-4">
-                                    <div className="bg-slate-800 text-xs px-2 py-1 rounded inline-block text-emerald-400 mb-2">{selectedElement?.id}</div>
-
-                                    {/* Edición de Textos o Colores */}
-                                    {selectedElement?.type === 'text' && (
-                                        <div>
-                                            <label className="text-xs text-slate-400 mb-1 block">Editar Texto</label>
-                                            <input type="text" value={selectedElement.text} onChange={(e) => updateElementProperty('text', e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-sm text-white outline-none focus:border-amber-500" />
-                                        </div>
-                                    )}
-                                    {selectedElement?.type !== 'image' && (
-                                        <div>
-                                            <label className="text-xs text-slate-400 mb-1 block">Color Hex</label>
-                                            <input type="text" value={selectedElement.color || '#ffffff'} onChange={(e) => updateElementProperty('color', e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-sm text-white outline-none focus:border-amber-500" />
-                                        </div>
-                                    )}
-
-                                    {/* Carga de PNGs */}
-                                    <div className="bg-slate-950 p-3 rounded border border-slate-800">
-                                        <label className="flex items-center justify-center w-full h-12 bg-slate-900 border border-slate-700 border-dashed rounded cursor-pointer hover:border-amber-500 mb-2">
-                                            <span className="text-slate-400 text-xs"><i className="fas fa-upload mr-2"></i>Subir PNG/JPG</span>
-                                            <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                                        </label>
-                                        {selectedElement?.type === 'image' && (
-                                            <button onClick={handleRemoveImage} className="w-full bg-red-900/40 text-red-300 text-xs py-1 rounded border border-red-800"><i className="fas fa-trash-can mr-2"></i>Borrar Imagen</button>
-                                        )}
+                            {/* PISTAS DE TIEMPO */}
+                            <div className="flex-1 bg-[#121212] overflow-auto relative">
+                                {/* REGLA DE TIEMPO TOP */}
+                                <div className="h-6 border-b border-[#2d2d2d] bg-[#1a1a1a] relative cursor-text" ref={timelineRef} onMouseDown={handleTimelineClick} onMouseMove={handleTimelineDrag}>
+                                    {/* Playhead Vertical */}
+                                    <div className="playhead-line" style={{ left: `${(time / data.config.duration) * 100}%` }}>
+                                        <div className="playhead-head"></div>
                                     </div>
-
-                                    {/* Posiciones Básicas */}
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="text-[10px] text-slate-400">X: {selectedElement?.x}</label>
-                                            <input type="range" min="-500" max="1500" value={selectedElement?.x || 0} onChange={(e) => updateElementProperty('x', parseInt(e.target.value))} className="w-full" />
+                                    {/* Marcadores de segundos */}
+                                    {[...Array(Math.ceil(data.config.duration) + 1)].map((_, i) => (
+                                        <div key={i} className="absolute text-[9px] text-gray-500 top-1" style={{ left: `${(i / data.config.duration) * 100}%` }}>
+                                            <div className="w-[1px] h-1.5 bg-[#3f3f46] mx-auto mb-0.5"></div>
+                                            {i}s
                                         </div>
-                                        <div>
-                                            <label className="text-[10px] text-slate-400">Y: {selectedElement?.y}</label>
-                                            <input type="range" min="-500" max="2500" value={selectedElement?.y || 0} onChange={(e) => updateElementProperty('y', parseInt(e.target.value))} className="w-full" />
-                                        </div>
-                                        {(selectedElement?.type === 'rect' || selectedElement?.type === 'image') && (
-                                            <>
-                                                <div><label className="text-[10px] text-slate-400">Ancho</label><input type="number" value={selectedElement?.width || 0} onChange={(e) => updateElementProperty('width', parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-700 text-white text-xs p-1 rounded" /></div>
-                                                <div><label className="text-[10px] text-slate-400">Alto</label><input type="number" value={selectedElement?.height || 0} onChange={(e) => updateElementProperty('height', parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-700 text-white text-xs p-1 rounded" /></div>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* ANIMACIONES (KEYFRAMES MANAGER) NUEVO */}
-                                    <div className="mt-6 border-t border-slate-800 pt-4">
-                                        <div className="flex justify-between items-center mb-3">
-                                            <span className="text-xs font-bold text-amber-500"><i className="fas fa-film mr-2"></i>KEYFRAMES</span>
-                                            <button onClick={handleAddKeyframe} className="text-emerald-400 text-xs hover:text-emerald-300"><i className="fas fa-plus"></i> Añadir</button>
-                                        </div>
-                                        
-                                        <div className="space-y-2">
-                                            {selectedElement?.animations?.map((anim, idx) => (
-                                                <div key={idx} className="bg-slate-950 p-2 rounded border border-slate-800 relative">
-                                                    <button onClick={() => handleDeleteKeyframe(idx)} className="absolute top-1 right-2 text-red-500 hover:text-red-400 text-xs"><i className="fas fa-times"></i></button>
-                                                    <div className="grid grid-cols-2 gap-2 mb-2 pr-4">
-                                                        <div>
-                                                            <label className="text-[9px] text-slate-500">Propiedad</label>
-                                                            <select value={anim.prop} onChange={(e) => handleUpdateKeyframe(idx, 'prop', e.target.value)} className="keyframe-input">
-                                                                <option value="x">Posición X</option><option value="y">Posición Y</option>
-                                                                <option value="scale">Escala</option><option value="rotation">Rotación</option>
-                                                                <option value="opacity">Opacidad</option><option value="color">Color</option>
-                                                            </select>
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-[9px] text-slate-500">Ease (Suavizado)</label>
-                                                            <select value={anim.ease || 'linear'} onChange={(e) => handleUpdateKeyframe(idx, 'ease', e.target.value)} className="keyframe-input">
-                                                                <option value="linear">Lineal</option><option value="easeOut">Ease Out</option><option value="easeOutBounce">Rebote</option><option value="easeInOut">Suave Ent/Sal</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-4 gap-1">
-                                                        <div><label className="text-[9px] text-slate-500">De</label><input type="text" value={anim.from} onChange={(e) => handleUpdateKeyframe(idx, 'from', e.target.value)} className="keyframe-input" /></div>
-                                                        <div><label className="text-[9px] text-slate-500">A</label><input type="text" value={anim.to} onChange={(e) => handleUpdateKeyframe(idx, 'to', e.target.value)} className="keyframe-input" /></div>
-                                                        <div><label className="text-[9px] text-slate-500">Inicio (s)</label><input type="number" step="0.1" value={anim.start} onChange={(e) => handleUpdateKeyframe(idx, 'start', e.target.value)} className="keyframe-input text-amber-200" /></div>
-                                                        <div><label className="text-[9px] text-slate-500">Fin (s)</label><input type="number" step="0.1" value={anim.end} onChange={(e) => handleUpdateKeyframe(idx, 'end', e.target.value)} className="keyframe-input text-amber-200" /></div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {(!selectedElement?.animations || selectedElement.animations.length === 0) && (
-                                                <div className="text-center text-[10px] text-slate-500 py-2">Sin animaciones. Elemento estático.</div>
-                                            )}
-                                        </div>
-                                    </div>
-
+                                    ))}
                                 </div>
-                            )}
-                        </div>
-                    </div>
 
-                    {/* PANEL IZQUIERDO: JSON & VELOCIDAD */}
-                    <div className="order-3 lg:order-1 w-full lg:w-1/4 min-h-[40vh] lg:h-full bg-slate-900 lg:border-r border-slate-800 flex flex-col z-20">
-                        <div className="p-4 bg-slate-950 border-b border-slate-800 sticky top-0"><h2 className="font-bold text-amber-500 text-sm"><i className="fas fa-code mr-2"></i>CÓDIGO</h2></div>
-                        <textarea value={jsonText} onChange={handleJsonChange} className="flex-1 bg-slate-900 p-4 text-emerald-400 font-mono text-[10px] focus:outline-none resize-none" spellCheck="false"></textarea>
-                        <div className="p-4 bg-slate-950 border-t border-slate-800">
-                            <label className="text-xs font-bold text-slate-400 flex justify-between mb-2"><span>Velocidad Global:</span><span className="text-amber-500">{playbackSpeed.toFixed(1)}x</span></label>
-                            <input type="range" min="0.2" max="3.0" step="0.1" value={playbackSpeed} onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))} className="w-full" />
+                                {/* CONTENEDOR DE PISTAS */}
+                                <div className="relative min-w-full">
+                                    {data.elements.map(el => (
+                                        <div key={`track-${el.id}`} onClick={() => setSelectedId(el.id)} className={`h-12 border-b border-[#2d2d2d] track-bg relative ${selectedId === el.id ? 'bg-[#18181b]' : ''}`}>
+                                            
+                                            {/* BLOQUE DEL CLIP (Simulado al 100% de duración por ahora) */}
+                                            <div className={`absolute top-2 h-8 rounded text-[10px] pl-2 flex items-center overflow-hidden border ${selectedId === el.id ? 'border-white bg-[#27272a]' : 'border-[#3f3f46] bg-[#1e1e1e]'}`} style={{ left: '0%', width: '100%' }}>
+                                                <span className="truncate md:hidden mr-2">{el.id}</span> {/* Nombre para móviles */}
+                                                
+                                                {/* DIBUJO DE KEYFRAMES (Diamantes) */}
+                                                {el.animations?.map((anim, idx) => {
+                                                    const leftPercent = (anim.start / data.config.duration) * 100;
+                                                    const rightPercent = (anim.end / data.config.duration) * 100;
+                                                    return (
+                                                        <React.Fragment key={idx}>
+                                                            {/* Diamante Start */}
+                                                            <div className="absolute top-1/2 -translate-y-1/2 -ml-1 text-[#cbfb45] text-[12px] cursor-pointer" style={{ left: `${leftPercent}%` }} title={`Keyframe: ${anim.prop}`}>♦</div>
+                                                            {/* Línea conectora */}
+                                                            <div className="absolute top-1/2 -translate-y-1/2 h-[1px] bg-white/20 pointer-events-none" style={{ left: `${leftPercent}%`, width: `${rightPercent - leftPercent}%` }}></div>
+                                                            {/* Diamante End */}
+                                                            <div className="absolute top-1/2 -translate-y-1/2 -ml-1 text-[#cbfb45] text-[12px] cursor-pointer" style={{ left: `${rightPercent}%` }} title={`Keyframe: ${anim.prop}`}>♦</div>
+                                                        </React.Fragment>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
