@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Vibe Studio Suite | techexchange Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -10,8 +10,9 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        body { background-color: #020617; color: #f1f5f9; font-family: 'Inter', sans-serif; overflow: hidden; }
-        ::-webkit-scrollbar { width: 6px; }
+        body { background-color: #020617; color: #f1f5f9; font-family: 'Inter', sans-serif; margin: 0; }
+        /* Scrollbars elegantes */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         input[type="range"] { accent-color: #cbfb45; }
     </style>
@@ -22,7 +23,6 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // JSON Por defecto: Tema de reparación para probar reemplazo de Emojis por Fotos
         const initialJSON = {
           "config": { "width": 1080, "height": 1920, "fps": 60, "duration": 5.0, "background": "#0f172a" },
           "elements": [
@@ -94,15 +94,13 @@
             const [time, setTime] = useState(0);
             const [isPlaying, setIsPlaying] = useState(false);
             const [isExporting, setIsExporting] = useState(false);
-            const [playbackSpeed, setPlaybackSpeed] = useState(1.0); // NUEVO: Velocidad Global
+            const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
             const [selectedId, setSelectedId] = useState(null);
             const [imagesAssets, setImagesAssets] = useState({});
             
             const canvasRef = useRef(null);
             const animRef = useRef(null);
-            const containerRef = useRef(null);
 
-            // PRELOADER
             const loadImages = async (elements) => {
                 const loaded = { ...imagesAssets };
                 const promises = elements.filter(el => el.type === 'image' && el.src).map(el => {
@@ -121,7 +119,6 @@
 
             useEffect(() => { loadImages(data.elements); }, [data]);
 
-            // MOTOR DE VALORES ANIMADOS
             const getAnimatedValue = (element, propName, defaultValue, currentT) => {
                 const anims = element.animations?.filter(a => a.prop === propName);
                 if (!anims || anims.length === 0) return defaultValue;
@@ -141,7 +138,6 @@
                 return currentValue;
             };
 
-            // RENDERIZADOR NÚCLEO
             const renderCanvas = (currentT) => {
                 const canvas = canvasRef.current;
                 if (!canvas) return;
@@ -216,11 +212,10 @@
                         ctx.fillText(el.text, 0, 0);
                     }
 
-                    // DIBUJAR CAJA DE SELECCIÓN (Solo UI)
                     if (el.id === selectedId && !isExporting) {
                         ctx.strokeStyle = "#cbfb45";
-                        ctx.lineWidth = 4 / scale; // Mantener grosor constante visualmente
-                        ctx.setLineDash([10 / scale, 10 / scale]);
+                        ctx.lineWidth = 6 / scale; 
+                        ctx.setLineDash([15 / scale, 15 / scale]);
                         
                         const w = el.width || (el.radius ? el.radius * 2 : 200);
                         const h = el.height || (el.radius ? el.radius * 2 : 100);
@@ -236,12 +231,10 @@
                 });
             };
 
-            // BUCLE DE REPRODUCCIÓN (Afectado por Velocidad Global)
             useEffect(() => {
                 if (isPlaying && !isExporting) {
                     let lastTime = performance.now();
                     const loop = (now) => {
-                        // Multiplicar el Delta Time por la velocidad seleccionada
                         const dt = ((now - lastTime) / 1000) * playbackSpeed;
                         lastTime = now;
                         setTime(prev => {
@@ -259,25 +252,21 @@
 
             useEffect(() => { if (!isExporting) renderCanvas(time); }, [time, data, isExporting, selectedId, imagesAssets]);
 
-            // SISTEMA DE SELECCIÓN (HIT-DETECTION)
             const handleCanvasClick = (e) => {
                 const canvas = canvasRef.current;
                 const rect = canvas.getBoundingClientRect();
                 
-                // Mapear coordenadas del mouse a la resolución interna del canvas (1080x1920)
                 const scaleX = canvas.width / rect.width;
                 const scaleY = canvas.height / rect.height;
                 const clickX = (e.clientX - rect.left) * scaleX;
                 const clickY = (e.clientY - rect.top) * scaleY;
                 
-                // Buscar colisión desde el elemento más arriba (reverso)
                 let hitId = null;
                 for (let i = data.elements.length - 1; i >= 0; i--) {
                     const el = data.elements[i];
                     const x = getAnimatedValue(el, 'x', el.x || 0, time);
                     const y = getAnimatedValue(el, 'y', el.y || 0, time);
                     
-                    // Cálculo de bounding box aproximado
                     const w = el.width || (el.radius ? el.radius * 2 : 300);
                     const h = el.height || (el.radius ? el.radius * 2 : 100);
                     
@@ -294,7 +283,6 @@
                 setSelectedId(hitId);
             };
 
-            // ACTUALIZAR PROPIEDADES EN TIEMPO REAL
             const updateElementProperty = (prop, value) => {
                 if(!selectedId) return;
                 const newElements = data.elements.map(el => el.id === selectedId ? { ...el, [prop]: value } : el);
@@ -303,35 +291,31 @@
                 setJsonText(JSON.stringify(newData, null, 2));
             };
 
-            // SUBIR IMAGEN (Convierte cualquier elemento a Imagen)
+            // OPTIMIZACIÓN CERO LAG: Uso de URL.createObjectURL en lugar de Base64
             const handleImageUpload = (e) => {
                 const file = e.target.files[0];
                 if (!file || !selectedId) return;
                 
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    const newSrc = ev.target.result;
-                    const newElements = data.elements.map(el => {
-                        if (el.id === selectedId) {
-                            // Guardamos el tipo original por si el usuario borra la imagen
-                            return { ...el, type: 'image', src: newSrc, _originalType: el.type !== 'image' ? el.type : (el._originalType || 'rect') };
-                        }
-                        return el;
-                    });
-                    const newData = { ...data, elements: newElements };
-                    setData(newData);
-                    setJsonText(JSON.stringify(newData, null, 2));
-                };
-                reader.readAsDataURL(file);
+                // Genera un enlace local instantáneo y ligero
+                const objectUrl = URL.createObjectURL(file);
+                
+                const newElements = data.elements.map(el => {
+                    if (el.id === selectedId) {
+                        return { ...el, type: 'image', src: objectUrl, _originalType: el.type !== 'image' ? el.type : (el._originalType || 'rect') };
+                    }
+                    return el;
+                });
+                const newData = { ...data, elements: newElements };
+                setData(newData);
+                setJsonText(JSON.stringify(newData, null, 2));
             };
 
-            // BORRAR IMAGEN (Revierte al tipo original)
             const handleRemoveImage = () => {
                 if(!selectedId) return;
                 const newElements = data.elements.map(el => {
                     if (el.id === selectedId) {
                         const { src, _originalType, ...rest } = el;
-                        return { ...rest, type: _originalType || 'rect' }; // Vuelve a ser un rectángulo si no hay tipo previo
+                        return { ...rest, type: _originalType || 'rect' };
                     }
                     return el;
                 });
@@ -339,21 +323,18 @@
                 setData(newData);
                 setJsonText(JSON.stringify(newData, null, 2));
                 
-                // Limpiar del caché de imágenes
                 const newAssets = {...imagesAssets};
                 delete newAssets[selectedId];
                 setImagesAssets(newAssets);
             };
 
-            // EXPORTAR VIDEO SIN FALLOS
             const handleExport = async () => {
                 if (!canvasRef.current) return;
-                setSelectedId(null); // Quitar selector antes de grabar
+                setSelectedId(null);
                 setIsPlaying(false);
                 setIsExporting(true);
                 setTime(0);
 
-                // Esperamos 1 frame para asegurar que la caja de selección desapareció visualmente
                 await new Promise(r => setTimeout(r, 50));
 
                 const stream = canvasRef.current.captureStream(data.config.fps);
@@ -376,7 +357,6 @@
                 let exportFrameId;
 
                 const exportLoop = (now) => {
-                    // Exportar respetando la velocidad global elegida
                     const elapsedTime = ((now - startTime) / 1000) * playbackSpeed;
                     if (elapsedTime > data.config.duration) {
                         mediaRecorder.stop();
@@ -391,7 +371,6 @@
                 exportFrameId = requestAnimationFrame(exportLoop);
             };
 
-            // Sincronizar editor de texto con el Canvas
             const handleJsonChange = (e) => {
                 setJsonText(e.target.value);
                 try { const parsed = JSON.parse(e.target.value); setData(parsed); } catch(err) {}
@@ -400,46 +379,22 @@
             const selectedElement = data.elements.find(el => el.id === selectedId);
 
             return (
-                <div className="flex h-screen overflow-hidden flex-row">
+                // Diseño Responsivo: Columnas en escritorio, Apilado en móviles
+                <div className="flex flex-col lg:flex-row h-screen w-full bg-slate-950 overflow-y-auto lg:overflow-hidden">
                     
-                    {/* PANEL IZQUIERDO: JSON & CONTROLES GLOBALES */}
-                    <div className="w-1/4 bg-slate-900 border-r border-slate-800 flex flex-col shadow-2xl z-20">
-                        <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
-                            <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-code mr-2"></i>SOURCE CODE</h2>
-                        </div>
-                        <textarea 
-                            value={jsonText} 
-                            onChange={handleJsonChange}
-                            className="flex-1 bg-slate-900 p-4 text-emerald-400 font-mono text-xs focus:outline-none resize-none leading-relaxed"
-                            spellCheck="false"
-                        ></textarea>
-                        
-                        {/* CONTROL DE VELOCIDAD GLOBAL */}
-                        <div className="p-4 bg-slate-950 border-t border-slate-800">
-                            <label className="text-xs font-bold text-slate-400 flex justify-between mb-2">
-                                <span><i className="fas fa-gauge-high mr-2"></i>Velocidad de Animación:</span>
-                                <span className="text-amber-500">{playbackSpeed.toFixed(1)}x</span>
-                            </label>
-                            <input 
-                                type="range" min="0.2" max="3.0" step="0.1" value={playbackSpeed} 
-                                onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))} 
-                                className="w-full cursor-pointer"
-                            />
-                        </div>
-                    </div>
-
-                    {/* PANEL CENTRAL: CANVAS & REPRODUCTOR */}
-                    <div className="flex-1 flex flex-col relative" ref={containerRef}>
+                    {/* PANEL CENTRAL: CANVAS & REPRODUCTOR (Se muestra PRIMERO en móviles) */}
+                    <div className="order-1 lg:order-2 w-full lg:flex-1 flex flex-col relative min-h-[60vh] lg:h-full border-b lg:border-b-0 border-slate-800">
                         {isExporting && (
                             <div className="absolute inset-0 bg-black/90 z-50 flex items-center justify-center flex-col backdrop-blur-md">
-                                <i className="fas fa-compact-disc animate-spin text-5xl text-amber-500 mb-6"></i>
-                                <h2 className="text-2xl font-bold tracking-tight">Renderizando Producción...</h2>
-                                <p className="text-slate-400 mt-2 font-mono text-sm">Grabando a {data.config.fps} FPS puros | Velocidad: {playbackSpeed}x</p>
+                                <i className="fas fa-compact-disc animate-spin text-4xl lg:text-5xl text-amber-500 mb-4 lg:mb-6"></i>
+                                <h2 className="text-xl lg:text-2xl font-bold tracking-tight">Renderizando Producción...</h2>
+                                <p className="text-slate-400 mt-2 font-mono text-xs lg:text-sm text-center px-4">Grabando a {data.config.fps} FPS puros | Velocidad: {playbackSpeed}x</p>
                             </div>
                         )}
                         
-                        <div className="flex-1 flex items-center justify-center p-8 overflow-hidden relative">
-                            <div className="relative shadow-2xl shadow-indigo-900/10 border border-slate-800 rounded-lg overflow-hidden bg-black" style={{ height: '80vh', aspectRatio: '9/16' }}>
+                        {/* Contenedor del Canvas ajustado para no desbordar */}
+                        <div className="flex-1 flex items-center justify-center p-4 lg:p-8 overflow-hidden relative">
+                            <div className="relative shadow-2xl shadow-indigo-900/10 border border-slate-800 rounded-lg overflow-hidden bg-black h-full max-h-[80vh] aspect-[9/16]">
                                 <canvas 
                                     ref={canvasRef} 
                                     width={data.config.width} 
@@ -450,69 +405,68 @@
                             </div>
                         </div>
 
-                        {/* REPRODUCTOR */}
-                        <div className="h-20 bg-slate-900 border-t border-slate-800 px-8 flex items-center justify-between z-10">
-                            <div className="flex items-center space-x-6">
-                                <button onClick={() => setTime(0)} className="text-slate-400 hover:text-white text-xl transition-colors"><i className="fas fa-backward-step"></i></button>
-                                <button onClick={() => setIsPlaying(!isPlaying)} className="w-12 h-12 bg-amber-500 hover:bg-amber-400 rounded-full text-black flex items-center justify-center text-xl shadow-lg transition-transform hover:scale-105">
+                        {/* REPRODUCTOR LÍQUIDO */}
+                        <div className="bg-slate-900 border-t border-slate-800 px-4 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-4 z-10">
+                            <div className="flex items-center space-x-3 lg:space-x-6">
+                                <button onClick={() => setTime(0)} className="text-slate-400 hover:text-white text-lg lg:text-xl transition-colors"><i className="fas fa-backward-step"></i></button>
+                                <button onClick={() => setIsPlaying(!isPlaying)} className="w-10 h-10 lg:w-12 lg:h-12 bg-amber-500 hover:bg-amber-400 rounded-full text-black flex items-center justify-center text-lg lg:text-xl shadow-lg transition-transform hover:scale-105">
                                     <i className={`fas ${isPlaying ? 'fa-pause' : 'fa-play ml-1'}`}></i>
                                 </button>
-                                <span className="font-mono text-amber-500 text-sm font-bold bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+                                <span className="font-mono text-amber-500 text-xs lg:text-sm font-bold bg-slate-950 px-2 lg:px-3 py-1.5 rounded-lg border border-slate-800">
                                     {time.toFixed(2)}s / {data.config.duration}s
                                 </span>
                             </div>
-                            <button onClick={handleExport} className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 transition-all">
+                            {/* Botón de exportar visible en móviles */}
+                            <button onClick={handleExport} className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold px-4 lg:px-6 py-2 lg:py-3 rounded-lg shadow-lg flex items-center justify-center space-x-2 transition-all text-sm lg:text-base">
                                 <i className="fas fa-video"></i>
                                 <span>Exportar Master</span>
                             </button>
                         </div>
                     </div>
 
-                    {/* PANEL DERECHO: INSPECTOR VISUAL */}
-                    <div className="w-1/4 bg-slate-900 border-l border-slate-800 flex flex-col z-20 shadow-2xl overflow-y-auto">
-                        <div className="p-4 bg-slate-950 border-b border-slate-800">
+                    {/* PANEL DERECHO: INSPECTOR VISUAL (Se muestra SEGUNDO en móviles) */}
+                    <div className="order-2 lg:order-3 w-full lg:w-1/4 min-h-[40vh] lg:h-full bg-slate-900 border-b lg:border-b-0 lg:border-l border-slate-800 flex flex-col z-20 shadow-2xl overflow-y-auto">
+                        <div className="p-4 bg-slate-950 border-b border-slate-800 sticky top-0 z-10">
                             <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-sliders mr-2"></i>PROPIEDADES</h2>
                         </div>
                         
-                        <div className="p-6">
+                        <div className="p-4 lg:p-6">
                             {!selectedId ? (
                                 <div className="text-center py-10 opacity-50">
                                     <i className="fas fa-mouse-pointer text-4xl mb-4 text-slate-500"></i>
-                                    <p className="text-sm">Haz clic en un elemento del lienzo para editarlo visualmente.</p>
+                                    <p className="text-sm">Toca un elemento en el lienzo (arriba) para editarlo visualmente.</p>
                                 </div>
                             ) : (
                                 <div className="space-y-6">
-                                    {/* CABECERA INSPECTOR */}
                                     <div className="flex justify-between items-center border-b border-slate-800 pb-4">
-                                        <div>
-                                            <span className="text-xs text-slate-500 block uppercase tracking-wider">Elemento Seleccionado</span>
-                                            <span className="font-bold text-lg text-emerald-400">{selectedElement?.id}</span>
+                                        <div className="overflow-hidden">
+                                            <span className="text-xs text-slate-500 block uppercase tracking-wider">Elemento</span>
+                                            <span className="font-bold text-base lg:text-lg text-emerald-400 truncate">{selectedElement?.id}</span>
                                         </div>
                                         <div className="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700">{selectedElement?.type}</div>
                                     </div>
 
-                                    {/* CARGA DE ARCHIVOS (MAGIA) */}
+                                    {/* CARGA DE ARCHIVOS SIN LAG */}
                                     <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
                                         <label className="text-xs font-bold text-slate-400 mb-3 flex items-center">
                                             <i className="fas fa-image mr-2"></i> Reemplazar por Archivo Local
                                         </label>
                                         
-                                        <label className="flex items-center justify-center w-full h-24 px-4 transition bg-slate-900 border-2 border-slate-700 border-dashed rounded-md appearance-none cursor-pointer hover:border-amber-500 focus:outline-none mb-3">
+                                        <label className="flex items-center justify-center w-full h-20 lg:h-24 px-4 transition bg-slate-900 border-2 border-slate-700 border-dashed rounded-md appearance-none cursor-pointer hover:border-amber-500 focus:outline-none mb-3">
                                             <span className="flex items-center space-x-2">
                                                 <i className="fas fa-upload text-slate-400"></i>
-                                                <span className="font-medium text-slate-400 text-sm">Subir PNG / JPG</span>
+                                                <span className="font-medium text-slate-400 text-xs lg:text-sm">Subir PNG / JPG</span>
                                             </span>
                                             <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
                                         </label>
 
                                         {selectedElement?.type === 'image' && (
-                                            <button onClick={handleRemoveImage} className="w-full bg-red-900/50 hover:bg-red-800/80 text-red-300 text-xs py-2 rounded border border-red-800 transition-colors flex items-center justify-center">
-                                                <i className="fas fa-trash-can mr-2"></i> Borrar Imagen y Revertir Forma
+                                            <button onClick={handleRemoveImage} className="w-full bg-red-900/50 hover:bg-red-800/80 text-red-300 text-xs py-3 rounded border border-red-800 transition-colors flex items-center justify-center">
+                                                <i className="fas fa-trash-can mr-2"></i> Borrar Imagen y Revertir
                                             </button>
                                         )}
                                     </div>
 
-                                    {/* CONTROLES RÁPIDOS */}
                                     <div className="space-y-4">
                                         <div>
                                             <label className="text-xs text-slate-400 flex justify-between mb-1">
@@ -534,20 +488,46 @@
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="text-xs text-slate-400 block mb-1">Ancho</label>
-                                                    <input type="number" value={selectedElement?.width || 0} onChange={(e) => updateElementProperty('width', parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:border-amber-500 outline-none" />
+                                                    <input type="number" value={selectedElement?.width || 0} onChange={(e) => updateElementProperty('width', parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-sm text-white focus:border-amber-500 outline-none" />
                                                 </div>
                                                 <div>
                                                     <label className="text-xs text-slate-400 block mb-1">Alto</label>
-                                                    <input type="number" value={selectedElement?.height || 0} onChange={(e) => updateElementProperty('height', parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:border-amber-500 outline-none" />
+                                                    <input type="number" value={selectedElement?.height || 0} onChange={(e) => updateElementProperty('height', parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-sm text-white focus:border-amber-500 outline-none" />
                                                 </div>
                                             </div>
                                         )}
                                     </div>
-                                    
                                 </div>
                             )}
                         </div>
                     </div>
+
+                    {/* PANEL IZQUIERDO: JSON & CONTROLES (Se muestra TERCERO en móviles, abajo del todo) */}
+                    <div className="order-3 lg:order-1 w-full lg:w-1/4 min-h-[40vh] lg:h-full bg-slate-900 lg:border-r border-slate-800 flex flex-col shadow-2xl z-20">
+                        <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between sticky top-0">
+                            <h2 className="font-bold text-amber-500 text-sm tracking-wider"><i className="fas fa-code mr-2"></i>SOURCE CODE</h2>
+                        </div>
+                        
+                        <textarea 
+                            value={jsonText} 
+                            onChange={handleJsonChange}
+                            className="flex-1 bg-slate-900 p-4 text-emerald-400 font-mono text-xs focus:outline-none resize-none leading-relaxed min-h-[200px]"
+                            spellCheck="false"
+                        ></textarea>
+                        
+                        <div className="p-4 bg-slate-950 border-t border-slate-800">
+                            <label className="text-xs font-bold text-slate-400 flex justify-between mb-2">
+                                <span><i className="fas fa-gauge-high mr-2"></i>Velocidad:</span>
+                                <span className="text-amber-500">{playbackSpeed.toFixed(1)}x</span>
+                            </label>
+                            <input 
+                                type="range" min="0.2" max="3.0" step="0.1" value={playbackSpeed} 
+                                onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))} 
+                                className="w-full cursor-pointer"
+                            />
+                        </div>
+                    </div>
+
                 </div>
             );
         }
